@@ -1,14 +1,15 @@
 /* ============================================================
    The Ledger — Inventory Application
-   Pure vanilla JS, localStorage persistence,
-   Import/export for JSON, CSV, Poshmark, eBay
+   Pure vanilla JS, localStorage persistence
+   Features: UPC lookup, barcode scanning, Beanie DB auto-fill,
+             Multi-format import/export
    ============================================================ */
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
 
 const DEFAULT_FIELDS = {
-  id: '', name: '', category: 'Beanie Baby', sku: '',
+  id: '', name: '', category: 'Beanie Baby', sku: '', upc: '',
   brand: '', model: '', size: '', color: '', material: '',
   country: '', location: '', quantity: 1,
   // Beanie-specific
@@ -43,10 +44,11 @@ const DEFAULT_FIELDS = {
 // ============ STATE ============
 let state = {
   items: [],
-  settings: { view: 'grid', skuPrefix: 'BB-', skuCounter: 1 },
+  settings: { view: 'grid' },
   currentEditId: null,
   currentPhotos: [],
-  filter: { search: '', category: '', status: '', sort: 'created_desc' }
+  filter: { search: '', category: '', status: '', sort: 'created_desc' },
+  scanner: { stream: null, detector: null, loop: null }
 };
 
 // ============ STORAGE ============
@@ -68,7 +70,7 @@ function saveState() {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
   } catch (e) {
     console.error('Save failed:', e);
-    toast('Save failed — storage may be full. Export a backup and clear photos.', 'error');
+    toast('Save failed — storage may be full. Export a backup.', 'error');
   }
 }
 
@@ -87,13 +89,18 @@ function csvEscape(v) {
   if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
   return s;
 }
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
 
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.className = 'toast show ' + type;
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 3200);
+  toast._t = setTimeout(() => el.classList.remove('show'), 3400);
 }
 
 function confirmDialog(title, message) {
@@ -118,7 +125,6 @@ function confirmDialog(title, message) {
 // ============ SKU GEN ============
 function nextSku(category) {
   const prefix = (category === 'Beanie Baby') ? 'BB-' : (slug(category).slice(0, 3).toUpperCase() + '-');
-  // Find highest with this prefix
   let max = 0;
   state.items.forEach(it => {
     if (it.sku && it.sku.startsWith(prefix)) {
@@ -160,11 +166,9 @@ function render() {
     table.innerHTML = renderTable(filtered);
   }
 
-  // Attach click handlers
   document.querySelectorAll('[data-edit-id]').forEach(el => {
     el.addEventListener('click', () => openEditor(el.dataset.editId));
   });
-  // Populate category filter from data
   populateCategoryFilter();
 }
 
@@ -185,12 +189,19 @@ function renderStats() {
 function renderCard(item) {
   const img = (item.photos && item.photos[0])
     ? `<img src="${item.photos[0]}" alt="${escapeHtml(item.name)}" />`
-    : `<span class="card-image-placeholder">◈</span>`;
+    : `<span class="card-image-placeholder">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="20" cy="22" r="6"/><circle cx="44" cy="22" r="6"/>
+          <circle cx="32" cy="34" r="14"/>
+          <circle cx="26" cy="32" r="1.5" fill="currentColor"/><circle cx="38" cy="32" r="1.5" fill="currentColor"/>
+          <path d="M 28 40 Q 32 42.5 36 40" stroke-linecap="round"/>
+        </svg>
+      </span>`;
   const metaParts = [];
-  if (item.category) metaParts.push(`<span class="card-meta-item">${escapeHtml(item.category)}</span>`);
-  if (item.bb_year) metaParts.push(`<span class="card-meta-item">· ${escapeHtml(item.bb_year)}</span>`);
-  if (item.brand && item.category !== 'Beanie Baby') metaParts.push(`<span class="card-meta-item">· ${escapeHtml(item.brand)}</span>`);
-  if (item.location) metaParts.push(`<span class="card-meta-item">· ${escapeHtml(item.location)}</span>`);
+  if (item.category) metaParts.push(escapeHtml(item.category));
+  if (item.bb_year) metaParts.push(escapeHtml(item.bb_year));
+  if (item.brand && item.category !== 'Beanie Baby') metaParts.push(escapeHtml(item.brand));
+  if (item.location) metaParts.push(escapeHtml(item.location));
 
   const statusClass = 'status-' + slug(item.status || 'draft');
   const price = item.status === 'Sold' || item.status === 'Shipped'
@@ -203,7 +214,7 @@ function renderCard(item) {
       <div class="card-body">
         <div class="card-sku">${escapeHtml(item.sku || '—')}</div>
         <div class="card-name">${escapeHtml(item.name || 'Untitled')}</div>
-        <div class="card-meta">${metaParts.join(' ')}</div>
+        <div class="card-meta">${metaParts.map((p, i) => i === 0 ? p : `<span class="card-meta-dot">·</span>${p}`).join(' ')}</div>
         <div class="card-footer">
           ${price}
           <span class="status-badge ${statusClass}">${escapeHtml(item.status || 'Draft')}</span>
@@ -229,12 +240,6 @@ function renderTable(items) {
     </tr>`).join('')}</tbody></table>`;
 }
 
-function escapeHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
-
 function populateCategoryFilter() {
   const sel = document.getElementById('filterCategory');
   const current = sel.value;
@@ -250,7 +255,7 @@ function applyFilters(items) {
     if (status && i.status !== status) return false;
     if (search) {
       const q = search.toLowerCase();
-      const blob = [i.name, i.sku, i.brand, i.tags, i.location, i.listing_title, i.bb_year, i.category]
+      const blob = [i.name, i.sku, i.upc, i.brand, i.tags, i.location, i.listing_title, i.bb_year, i.category]
         .join(' ').toLowerCase();
       if (!blob.includes(q)) return false;
     }
@@ -277,9 +282,11 @@ function openEditor(id = null) {
   state.currentEditId = id;
   state.currentPhotos = [];
 
-  // Reset tabs
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'basics'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === 'basics'));
+  document.getElementById('upcStatus').textContent = '';
+  document.getElementById('upcStatus').className = 'lookup-status';
+  document.getElementById('beanieLookupResults').classList.remove('open');
 
   let item;
   if (id) {
@@ -288,7 +295,6 @@ function openEditor(id = null) {
     document.getElementById('modalEyebrow').textContent = `Entry · ${item.sku || '—'}`;
     document.getElementById('modalTitle').textContent = item.name || 'Untitled';
     document.getElementById('deleteBtn').style.display = '';
-    // Fill form
     Object.entries(item).forEach(([k, v]) => {
       const el = form.elements[k];
       if (el && el.type !== 'file') el.value = v ?? '';
@@ -299,12 +305,10 @@ function openEditor(id = null) {
     document.getElementById('modalEyebrow').textContent = 'New Entry';
     document.getElementById('modalTitle').textContent = 'Catalogue Item';
     document.getElementById('deleteBtn').style.display = 'none';
-    // Apply defaults
     Object.entries(DEFAULT_FIELDS).forEach(([k, v]) => {
       const el = form.elements[k];
       if (el && el.type !== 'file' && v !== '' && v != null) el.value = v;
     });
-    // auto-SKU
     form.elements.sku.value = nextSku(form.elements.category.value);
   }
 
@@ -319,6 +323,7 @@ function closeEditor() {
   document.getElementById('itemModal').classList.remove('open');
   state.currentEditId = null;
   state.currentPhotos = [];
+  document.getElementById('beanieSuggest').classList.remove('open');
 }
 
 function toggleBeanieTab(category) {
@@ -332,7 +337,7 @@ function updateTitleCount() {
   if (input && counter) {
     const len = input.value.length;
     counter.textContent = `${len} / 80${len > 50 ? ' (over Poshmark limit)' : ''}`;
-    counter.style.color = len > 80 ? '#7a1e1e' : len > 50 ? '#9a7e29' : '';
+    counter.className = 'char-count' + (len > 80 ? ' error' : len > 50 ? ' over' : '');
   }
 }
 
@@ -340,16 +345,13 @@ function saveItem(e) {
   e.preventDefault();
   const form = document.getElementById('itemForm');
   const data = {};
-  // Gather all named form fields
   Array.from(form.elements).forEach(el => {
     if (!el.name) return;
     data[el.name] = el.value;
   });
 
-  // Validate
   if (!data.name.trim()) { toast('Name is required', 'error'); return; }
   if (!data.sku.trim()) { toast('SKU is required', 'error'); return; }
-  // Check duplicate SKU
   const dup = state.items.find(i => i.sku === data.sku && i.id !== state.currentEditId);
   if (dup) { toast(`SKU "${data.sku}" is already used by "${dup.name}"`, 'error'); return; }
 
@@ -389,13 +391,297 @@ async function deleteCurrentItem() {
   toast('Item deleted', 'success');
 }
 
+// ============ UPC LOOKUP ============
+async function lookupUPC(upc) {
+  const status = document.getElementById('upcStatus');
+  const code = upc.replace(/\D/g, '');
+  if (code.length < 8) {
+    status.textContent = 'Enter at least 8 digits';
+    status.className = 'lookup-status error';
+    return;
+  }
+
+  status.textContent = 'Looking up product data…';
+  status.className = 'lookup-status loading';
+
+  // Try multiple free APIs in sequence.
+  // 1) Open Food Facts (free, no key) - general products despite the name
+  // 2) Open Library - books (ISBN)
+  const results = await Promise.allSettled([
+    fetchOpenFoodFacts(code),
+    (code.length === 10 || code.length === 13) ? fetchOpenLibrary(code) : Promise.reject()
+  ]);
+
+  let found = null;
+  for (const r of results) {
+    if (r.status === 'fulfilled' && r.value) { found = r.value; break; }
+  }
+
+  if (found) {
+    applyProductData(found);
+    status.innerHTML = `✓ Found via <strong>${found.source}</strong> — review the auto-filled fields`;
+    status.className = 'lookup-status success';
+  } else {
+    status.innerHTML = `No match found in public databases. This is normal for vintage/collectible items — fill in manually. UPC is saved for reference.`;
+    status.className = 'lookup-status';
+  }
+}
+
+async function fetchOpenFoodFacts(code) {
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status !== 1 || !data.product) return null;
+    const p = data.product;
+    return {
+      source: 'Open Food Facts',
+      name: p.product_name || p.generic_name || '',
+      brand: p.brands || '',
+      country: p.countries || '',
+      material: p.packaging || '',
+      size: p.quantity || '',
+      image: (p.image_front_url || p.image_url || '')
+    };
+  } catch (e) { return null; }
+}
+
+async function fetchOpenLibrary(isbn) {
+  try {
+    const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${encodeURIComponent(isbn)}&format=json&jscmd=data`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const key = `ISBN:${isbn}`;
+    if (!data[key]) return null;
+    const b = data[key];
+    return {
+      source: 'Open Library',
+      name: b.title || '',
+      brand: (b.authors && b.authors[0]) ? b.authors[0].name : '',
+      model: b.publishers && b.publishers[0] ? b.publishers[0].name : '',
+      country: '',
+      size: b.number_of_pages ? b.number_of_pages + ' pages' : '',
+      material: 'Book',
+      image: (b.cover && (b.cover.large || b.cover.medium)) || ''
+    };
+  } catch (e) { return null; }
+}
+
+function applyProductData(data) {
+  const form = document.getElementById('itemForm');
+  // Only fill empty fields — don't overwrite user-entered data
+  const setIfEmpty = (name, value) => {
+    if (!value) return;
+    const el = form.elements[name];
+    if (el && !el.value) el.value = value;
+  };
+  setIfEmpty('name', data.name);
+  setIfEmpty('brand', data.brand);
+  setIfEmpty('country', data.country);
+  setIfEmpty('material', data.material);
+  setIfEmpty('size', data.size);
+  setIfEmpty('model', data.model);
+
+  // If there's an image and user has no photos, try to add it
+  if (data.image && state.currentPhotos.length === 0) {
+    addPhotoFromUrl(data.image).catch(() => {/* ignore */});
+  }
+
+  // Switch category away from Beanie Baby if it was the default and this looks non-Beanie
+  const cat = form.elements.category;
+  if (cat.value === 'Beanie Baby' && data.source !== 'Ty') {
+    if (data.material === 'Book') cat.value = 'Books / Media';
+    else cat.value = 'Other';
+    toggleBeanieTab(cat.value);
+  }
+}
+
+async function addPhotoFromUrl(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const reader = new FileReader();
+    reader.onload = e => {
+      downscaleImage(e.target.result, 900).then(data => {
+        state.currentPhotos.push(data);
+        renderPhotoPreview();
+      });
+    };
+    reader.readAsDataURL(blob);
+  } catch (e) { /* CORS or network issue — ignore silently */ }
+}
+
+// ============ BARCODE SCANNER ============
+async function openScanner() {
+  if (!('BarcodeDetector' in window)) {
+    toast('Your browser does not support barcode scanning. Try Chrome or Edge on mobile.', 'error');
+    return;
+  }
+  const modal = document.getElementById('scannerModal');
+  const video = document.getElementById('scannerVideo');
+  const status = document.getElementById('scannerStatus');
+
+  modal.classList.add('open');
+  status.textContent = 'Starting camera…';
+
+  try {
+    const formats = await BarcodeDetector.getSupportedFormats();
+    state.scanner.detector = new BarcodeDetector({ formats: formats });
+    state.scanner.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    video.srcObject = state.scanner.stream;
+    await video.play();
+    status.textContent = 'Position the barcode in the frame…';
+    scanLoop();
+  } catch (e) {
+    console.error(e);
+    status.textContent = 'Camera access denied or unavailable.';
+    toast('Camera access failed: ' + e.message, 'error');
+  }
+}
+
+function scanLoop() {
+  const video = document.getElementById('scannerVideo');
+  const modal = document.getElementById('scannerModal');
+  if (!modal.classList.contains('open') || !state.scanner.detector) return;
+  state.scanner.detector.detect(video)
+    .then(codes => {
+      if (codes && codes.length > 0) {
+        const code = codes[0].rawValue;
+        closeScanner();
+        document.getElementById('upcInput').value = code;
+        toast(`Scanned: ${code}`, 'success');
+        lookupUPC(code);
+      } else {
+        state.scanner.loop = requestAnimationFrame(scanLoop);
+      }
+    })
+    .catch(() => {
+      state.scanner.loop = requestAnimationFrame(scanLoop);
+    });
+}
+
+function closeScanner() {
+  const modal = document.getElementById('scannerModal');
+  modal.classList.remove('open');
+  if (state.scanner.stream) {
+    state.scanner.stream.getTracks().forEach(t => t.stop());
+    state.scanner.stream = null;
+  }
+  if (state.scanner.loop) {
+    cancelAnimationFrame(state.scanner.loop);
+    state.scanner.loop = null;
+  }
+  state.scanner.detector = null;
+}
+
+// ============ BEANIE DB ============
+function onBeanieNameInput(value) {
+  const form = document.getElementById('itemForm');
+  if (form.elements.category.value !== 'Beanie Baby') return;
+
+  const sug = document.getElementById('beanieSuggest');
+  if (!value || value.length < 2) {
+    sug.classList.remove('open');
+    return;
+  }
+  const results = searchBeanieDB(value);
+  if (results.length === 0) {
+    sug.classList.remove('open');
+    return;
+  }
+  sug.innerHTML = results.map((r, idx) => `
+    <button type="button" data-bb-idx="${idx}">
+      <strong>${escapeHtml(r.name)}</strong>
+      <small>${escapeHtml(r.year || '')}${r.style ? ' · Style #' + escapeHtml(r.style) : ''}${r.retired ? ' · Retired ' + escapeHtml(r.retired) : ''}</small>
+    </button>
+  `).join('');
+  sug.classList.add('open');
+  sug.querySelectorAll('button').forEach(btn => {
+    btn.onclick = () => {
+      fillFromBeanieEntry(results[parseInt(btn.dataset.bbIdx, 10)]);
+      sug.classList.remove('open');
+    };
+  });
+}
+
+function doBeanieLookup() {
+  const query = document.getElementById('beanieLookupInput').value;
+  const results = searchBeanieDB(query);
+  const resEl = document.getElementById('beanieLookupResults');
+  if (results.length === 0) {
+    resEl.innerHTML = `<div style="padding: 0.7rem; color: var(--text-2); font-size: 0.85rem;">No matches found. Try a different spelling, or fill fields below and click <strong>Save to DB</strong> to add your own entry.</div>`;
+    resEl.classList.add('open');
+    return;
+  }
+  resEl.innerHTML = results.map((r, idx) => `
+    <button type="button" class="beanie-result" data-bb-idx="${idx}">
+      <strong>${escapeHtml(r.name)}</strong>
+      <small>${escapeHtml(r.year || '')}${r.style ? ' · Style #' + escapeHtml(r.style) : ''}${r.retired ? ' · Retired ' + escapeHtml(r.retired) : ''}${r.notes ? ' — ' + escapeHtml(r.notes.slice(0, 80)) + (r.notes.length > 80 ? '…' : '') : ''}</small>
+    </button>
+  `).join('');
+  resEl.classList.add('open');
+  resEl.querySelectorAll('.beanie-result').forEach(btn => {
+    btn.onclick = () => fillFromBeanieEntry(results[parseInt(btn.dataset.bbIdx, 10)]);
+  });
+}
+
+function fillFromBeanieEntry(entry) {
+  const form = document.getElementById('itemForm');
+  const setIfEmpty = (name, val) => {
+    if (!val) return;
+    const el = form.elements[name];
+    if (el && !el.value) el.value = val;
+  };
+  // Always set name if empty
+  setIfEmpty('name', entry.name);
+  setIfEmpty('bb_year', entry.year);
+  setIfEmpty('bb_birthday', entry.birthday);
+  setIfEmpty('bb_poem', entry.poem);
+  setIfEmpty('bb_style_num', entry.style);
+  setIfEmpty('brand', 'Ty Inc.');
+  // Retirement → rarity field
+  if (entry.retired || entry.notes) {
+    const el = form.elements.bb_rarity;
+    if (el && !el.value) {
+      const parts = [];
+      if (entry.retired) parts.push('Retired ' + entry.retired);
+      if (entry.notes) parts.push(entry.notes);
+      el.value = parts.join('. ');
+    }
+  }
+  toast(`Filled from: ${entry.name}`, 'success');
+  // Switch to beanie tab to show results
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'beanie'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === 'beanie'));
+}
+
+function saveCurrentAsBeanie() {
+  const form = document.getElementById('itemForm');
+  const name = form.elements.name.value.trim();
+  if (!name) { toast('Enter a name first', 'error'); return; }
+  const entry = {
+    name,
+    year: form.elements.bb_year.value,
+    birthday: form.elements.bb_birthday.value,
+    style: form.elements.bb_style_num.value,
+    poem: form.elements.bb_poem.value,
+    retired: '',
+    notes: form.elements.bb_rarity.value,
+    custom: true
+  };
+  saveUserBeanie(entry);
+  toast(`"${name}" saved to your reference DB`, 'success');
+}
+
 // ============ PHOTOS ============
 function handlePhotoFiles(files) {
   Array.from(files).forEach(file => {
     if (!file.type.startsWith('image/')) return;
     const reader = new FileReader();
     reader.onload = e => {
-      // Downscale to keep storage manageable
       downscaleImage(e.target.result, 900).then(data => {
         state.currentPhotos.push(data);
         renderPhotoPreview();
@@ -447,7 +733,8 @@ function exportJSON() {
     app: 'The Ledger',
     version: 1,
     count: state.items.length,
-    items: state.items
+    items: state.items,
+    userBeanies: getUserBeanies()
   };
   downloadBlob(JSON.stringify(payload, null, 2), `ledger-backup-${todayStr()}.json`, 'application/json');
   toast(`Exported ${state.items.length} items`, 'success');
@@ -463,7 +750,6 @@ function exportCSV() {
 }
 
 function exportPoshmark() {
-  // Poshmark is manual-upload: generate rich text listings
   const listable = state.items.filter(i => !['Sold','Shipped','Archived'].includes(i.status));
   if (!listable.length) { toast('No listable items', 'error'); return; }
   const out = listable.map(i => {
@@ -492,7 +778,6 @@ function exportPoshmark() {
 }
 
 function exportEbay() {
-  // eBay File Exchange CSV — simplified template
   const listable = state.items.filter(i => !['Sold','Shipped','Archived'].includes(i.status));
   if (!listable.length) { toast('No listable items', 'error'); return; }
   const header = [
@@ -504,15 +789,12 @@ function exportEbay() {
     'C:Type', 'C:Character', 'C:Year Manufactured', 'C:Country/Region of Manufacture',
     'PackageLength', 'PackageWidth', 'PackageDepth', 'WeightMajor', 'WeightMinor'
   ];
-
   const conditionMap = {
     'New With Tags (NWT)': '1000', 'New Without Tags (NWOT)': '1500',
     'New With Defects': '1750', 'Like New / Excellent Used': '3000',
     'Very Good': '4000', 'Good': '5000', 'Fair': '6000', 'Poor / For Parts': '7000'
   };
-
   const rows = listable.map(i => {
-    // Convert weight to lb + oz for eBay
     const weightLb = i.weight_unit === 'lb' ? Math.floor(parseFloat(i.weight_value) || 0) : 0;
     const weightOz = i.weight_unit === 'oz' ? (parseFloat(i.weight_value) || 0) :
                      i.weight_unit === 'lb' ? Math.round(((parseFloat(i.weight_value) || 0) - weightLb) * 16) :
@@ -524,7 +806,7 @@ function exportEbay() {
       buildDescription(i).replace(/\n/g, '<br>'),
       '', i.quantity || 1, 'FixedPrice', i.price || '', 'GTC',
       '', 'USPSGroundAdvantage', i.ship_cost || '',
-      '1', 'ReturnsAccepted', i.brand || '', '',
+      '1', 'ReturnsAccepted', i.brand || '', i.upc || '',
       i.category === 'Beanie Baby' ? 'Plush Beanbag' : '',
       i.name || '', i.bb_year || '', i.country || '',
       i.box_length || '', i.box_width || '', i.box_height || '',
@@ -562,6 +844,7 @@ function buildDescription(i) {
     if (i.color) parts.push(`• Color: ${i.color}`);
     if (i.material) parts.push(`• Material: ${i.material}`);
     if (i.country) parts.push(`• Country of Manufacture: ${i.country}`);
+    if (i.upc) parts.push(`• UPC: ${i.upc}`);
   }
   parts.push(`• Condition: ${i.condition}`);
   if (i.condition_notes) parts.push(`• Flaws/Notes: ${i.condition_notes}`);
@@ -577,9 +860,7 @@ function buildDescription(i) {
   return parts.join('\n');
 }
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
+function todayStr() { return new Date().toISOString().slice(0, 10); }
 
 function downloadBlob(content, filename, type) {
   const blob = new Blob([content], { type });
@@ -590,7 +871,6 @@ function downloadBlob(content, filename, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// ============ IMPORT ============
 function openImportModal() {
   document.getElementById('importModal').classList.add('open');
   document.getElementById('importFile').value = '';
@@ -604,15 +884,16 @@ function doImport() {
   reader.onload = e => {
     try {
       let incoming;
+      let userBeanies = null;
       if (file.name.toLowerCase().endsWith('.json')) {
         const data = JSON.parse(e.target.result);
         incoming = Array.isArray(data) ? data : (data.items || []);
+        if (data.userBeanies) userBeanies = data.userBeanies;
       } else {
         incoming = parseCSV(e.target.result);
       }
       if (!incoming.length) throw new Error('No items found in file');
 
-      // Normalize: ensure every item has id & defaults
       incoming = incoming.map(raw => {
         const item = { ...DEFAULT_FIELDS };
         Object.entries(raw).forEach(([k, v]) => {
@@ -628,7 +909,6 @@ function doImport() {
       if (mode === 'replace') {
         state.items = incoming;
       } else {
-        // Merge by SKU/id
         incoming.forEach(imp => {
           const existingIdx = state.items.findIndex(i => i.id === imp.id || (imp.sku && i.sku === imp.sku));
           if (existingIdx >= 0) state.items[existingIdx] = imp;
@@ -636,6 +916,10 @@ function doImport() {
         });
       }
       saveState();
+      // Also restore user beanie entries
+      if (userBeanies && Array.isArray(userBeanies)) {
+        localStorage.setItem('theLedger.userBeanies.v1', JSON.stringify(userBeanies));
+      }
       render();
       document.getElementById('importModal').classList.remove('open');
       toast(`Imported ${incoming.length} items (${mode})`, 'success');
@@ -648,7 +932,6 @@ function doImport() {
 }
 
 function parseCSV(text) {
-  // Minimal CSV parser supporting quoted fields & embedded commas/newlines
   const rows = [];
   let cur = [], field = '', inQuotes = false;
   for (let i = 0; i < text.length; i++) {
@@ -680,16 +963,13 @@ function parseCSV(text) {
 function init() {
   loadState();
 
-  // Add
   document.getElementById('addBtn').onclick = () => openEditor();
-  // Close / cancel
   document.getElementById('modalClose').onclick = closeEditor;
   document.getElementById('cancelBtn').onclick = closeEditor;
   document.querySelector('#itemModal .modal-backdrop').onclick = closeEditor;
-  // Delete
   document.getElementById('deleteBtn').onclick = deleteCurrentItem;
-  // Save
   document.getElementById('itemForm').onsubmit = saveItem;
+
   // Tabs
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.onclick = () => {
@@ -699,25 +979,54 @@ function init() {
     };
   });
 
-  // Category change -> toggle beanie tab & auto-SKU prefix if new entry
+  // Category change
   document.getElementById('categorySelect').onchange = e => {
     toggleBeanieTab(e.target.value);
     if (!state.currentEditId) {
       document.querySelector('[name="sku"]').value = nextSku(e.target.value);
     }
   };
-  // Auto-SKU button
   document.getElementById('autoSku').onclick = () => {
     const cat = document.getElementById('categorySelect').value;
     document.querySelector('[name="sku"]').value = nextSku(cat);
   };
-  // Title char counter
   document.querySelector('[name="listing_title"]').addEventListener('input', updateTitleCount);
+
+  // UPC lookup
+  document.getElementById('upcLookup').onclick = () => {
+    const val = document.getElementById('upcInput').value.trim();
+    if (!val) { toast('Enter a UPC', 'error'); return; }
+    lookupUPC(val);
+  };
+  document.getElementById('upcInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('upcLookup').click(); }
+  });
+  document.getElementById('upcScan').onclick = openScanner;
+  document.getElementById('scannerClose').onclick = closeScanner;
+  document.querySelector('#scannerModal .modal-backdrop').onclick = closeScanner;
+
+  // Beanie name typeahead
+  const nameInput = document.getElementById('nameInput');
+  nameInput.addEventListener('input', e => onBeanieNameInput(e.target.value));
+  nameInput.addEventListener('blur', () => setTimeout(() => document.getElementById('beanieSuggest').classList.remove('open'), 200));
+  nameInput.addEventListener('focus', e => {
+    if (e.target.value.length >= 2) onBeanieNameInput(e.target.value);
+  });
+
+  // Beanie lookup on beanie tab
+  document.getElementById('beanieLookupInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doBeanieLookup(); }
+  });
+  document.getElementById('beanieLookupInput').addEventListener('input', () => doBeanieLookup());
+  document.getElementById('saveBeanieBtn').onclick = saveCurrentAsBeanie;
 
   // Photos
   const photoInput = document.getElementById('photoInput');
   photoInput.onchange = e => handlePhotoFiles(e.target.files);
   const drop = document.getElementById('photoDrop');
+  drop.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') photoInput.click();
+  });
   drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
   drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
   drop.addEventListener('drop', e => {
@@ -777,6 +1086,7 @@ function init() {
   // Keyboard
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      closeScanner();
       document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'n' && !document.querySelector('.modal.open')) {
