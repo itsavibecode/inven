@@ -4,40 +4,53 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Ledger — Collectibles Inventory</title>
+<meta name="description" content="A self-hosted inventory manager for Beanie Babies and resale collectibles.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<!-- ============== HEADER ============== -->
-<header class="masthead">
-  <div class="masthead-inner">
+<!-- ============ HEADER ============ -->
+<header class="header">
+  <div class="header-inner">
     <div class="brand">
-      <div class="brand-mark">№</div>
+      <svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="20" cy="22" r="7" fill="currentColor"/>
+        <circle cx="44" cy="22" r="7" fill="currentColor"/>
+        <circle cx="20" cy="22" r="3" fill="var(--bg-0)"/>
+        <circle cx="44" cy="22" r="3" fill="var(--bg-0)"/>
+        <circle cx="32" cy="34" r="16" fill="currentColor"/>
+        <circle cx="26" cy="32" r="2.2" fill="var(--bg-0)"/>
+        <circle cx="38" cy="32" r="2.2" fill="var(--bg-0)"/>
+        <ellipse cx="32" cy="38" rx="2.5" ry="1.8" fill="var(--bg-0)"/>
+        <path d="M 28 41 Q 32 43.5 36 41" stroke="var(--bg-0)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M 47 42 q -2 -3 -4 -1 q -2 -2 -4 1 q 0 3 4 6 q 4 -3 4 -6 z" fill="#ef4444"/>
+      </svg>
       <div class="brand-text">
         <h1>The Ledger</h1>
-        <p class="tagline">A Cataloguer's Companion for Collectibles &amp; Resale</p>
+        <p class="tagline">Collectibles inventory · Poshmark &amp; eBay ready</p>
       </div>
     </div>
-    <nav class="stats-bar" id="statsBar">
-      <div class="stat"><span class="stat-label">Items</span><span class="stat-value" id="statTotal">0</span></div>
-      <div class="stat"><span class="stat-label">Active</span><span class="stat-value" id="statActive">0</span></div>
-      <div class="stat"><span class="stat-label">Sold</span><span class="stat-value" id="statSold">0</span></div>
-      <div class="stat"><span class="stat-label">Est. Value</span><span class="stat-value" id="statValue">$0</span></div>
-    </nav>
+    <div class="stats" id="statsBar">
+      <div class="stat"><span class="stat-value" id="statTotal">0</span><span class="stat-label">Items</span></div>
+      <div class="stat"><span class="stat-value" id="statActive">0</span><span class="stat-label">Active</span></div>
+      <div class="stat"><span class="stat-value" id="statSold">0</span><span class="stat-label">Sold</span></div>
+      <div class="stat"><span class="stat-value" id="statValue">$0</span><span class="stat-label">Est. Value</span></div>
+    </div>
   </div>
 </header>
 
-<!-- ============== TOOLBAR ============== -->
+<!-- ============ TOOLBAR ============ -->
 <section class="toolbar">
   <div class="toolbar-inner">
-    <div class="toolbar-group search-group">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="search" id="searchInput" placeholder="Search by name, SKU, tag, location…" autocomplete="off" />
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" id="searchInput" placeholder="Search by name, SKU, tag, UPC, location…" autocomplete="off" />
     </div>
-    <div class="toolbar-group">
+    <div class="filter-group">
       <select id="filterCategory">
         <option value="">All Categories</option>
       </select>
@@ -53,8 +66,8 @@
         <option value="Archived">Archived</option>
       </select>
       <select id="sortBy">
-        <option value="created_desc">Newest First</option>
-        <option value="created_asc">Oldest First</option>
+        <option value="created_desc">Newest first</option>
+        <option value="created_asc">Oldest first</option>
         <option value="name_asc">Name A→Z</option>
         <option value="name_desc">Name Z→A</option>
         <option value="price_desc">Price High→Low</option>
@@ -62,39 +75,39 @@
         <option value="sku_asc">SKU ↑</option>
       </select>
     </div>
-    <div class="toolbar-group toolbar-actions">
+    <div class="actions">
       <button class="btn btn-ghost" id="importBtn" title="Import JSON or CSV">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
         Import
       </button>
       <div class="dropdown">
         <button class="btn btn-ghost" id="exportBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21V9m0 0-4 4m4-4 4 4M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21V9m0 0-4 4m4-4 4 4M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>
           Export
         </button>
         <div class="dropdown-menu" id="exportMenu">
-          <button data-format="json">Full Backup (JSON)</button>
-          <button data-format="csv">Spreadsheet (CSV)</button>
-          <button data-format="poshmark">Poshmark Listings (TXT)</button>
-          <button data-format="ebay">eBay File Exchange (CSV)</button>
+          <button data-format="json"><strong>Full Backup</strong><small>JSON — re-importable</small></button>
+          <button data-format="csv"><strong>Spreadsheet</strong><small>CSV — Excel / Sheets</small></button>
+          <button data-format="poshmark"><strong>Poshmark Listings</strong><small>TXT — ready to copy</small></button>
+          <button data-format="ebay"><strong>eBay File Exchange</strong><small>CSV — direct upload</small></button>
         </div>
       </div>
       <button class="btn btn-primary" id="addBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
         New Item
       </button>
     </div>
   </div>
 </section>
 
-<!-- ============== MAIN ============== -->
+<!-- ============ MAIN ============ -->
 <main id="mainContent">
   <div class="view-toggle">
     <button class="view-btn active" data-view="grid" title="Grid View">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     </button>
     <button class="view-btn" data-view="table" title="Table View">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
     <span class="result-count" id="resultCount"></span>
   </div>
@@ -103,48 +116,80 @@
   <div id="itemTable" class="item-table" style="display:none;"></div>
 
   <div id="emptyState" class="empty-state">
-    <div class="empty-ornament">◆ ◇ ◆</div>
-    <h2>The ledger awaits its first entry</h2>
-    <p>Catalogue your collection with forensic detail, then list on Poshmark or eBay with a click.</p>
-    <button class="btn btn-primary" onclick="document.getElementById('addBtn').click()">
-      Catalogue First Item
-    </button>
-    <div class="empty-hint">
-      Already have data? <button class="link-btn" onclick="document.getElementById('importBtn').click()">Import a backup</button>
+    <svg class="empty-icon" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="20" cy="22" r="7" fill="currentColor" opacity=".3"/>
+      <circle cx="44" cy="22" r="7" fill="currentColor" opacity=".3"/>
+      <circle cx="32" cy="34" r="16" fill="currentColor" opacity=".3"/>
+      <circle cx="26" cy="32" r="2" fill="currentColor"/>
+      <circle cx="38" cy="32" r="2" fill="currentColor"/>
+      <path d="M 28 41 Q 32 43.5 36 41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    </svg>
+    <h2>No items yet</h2>
+    <p>Start cataloguing your collection — or import a backup to restore existing data.</p>
+    <div class="empty-actions">
+      <button class="btn btn-primary" onclick="document.getElementById('addBtn').click()">Add First Item</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('importBtn').click()">Import Backup</button>
     </div>
   </div>
 </main>
 
-<!-- ============== ITEM EDITOR MODAL ============== -->
+<!-- ============ EDITOR MODAL ============ -->
 <div class="modal" id="itemModal">
   <div class="modal-backdrop"></div>
   <div class="modal-card">
-    <div class="modal-header">
+    <header class="modal-header">
       <div>
         <p class="modal-eyebrow" id="modalEyebrow">New Entry</p>
         <h2 id="modalTitle">Catalogue Item</h2>
       </div>
       <button class="icon-btn" id="modalClose" aria-label="Close">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
-    </div>
+    </header>
 
-    <div class="modal-tabs">
+    <nav class="modal-tabs">
       <button class="tab-btn active" data-tab="basics">Basics</button>
       <button class="tab-btn" data-tab="beanie" id="beanieTab">Beanie Details</button>
       <button class="tab-btn" data-tab="condition">Condition</button>
       <button class="tab-btn" data-tab="listing">Listing &amp; Pricing</button>
       <button class="tab-btn" data-tab="shipping">Shipping</button>
       <button class="tab-btn" data-tab="photos">Photos &amp; Notes</button>
-    </div>
+    </nav>
 
     <form class="modal-form" id="itemForm">
+
       <!-- TAB: BASICS -->
       <section class="tab-panel active" data-panel="basics">
+        <!-- UPC Lookup Banner -->
+        <div class="lookup-card">
+          <div class="lookup-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7v10M7 7v10M11 7v10M15 7v10M19 7v10"/></svg>
+            <div>
+              <h4>UPC / Barcode Lookup</h4>
+              <p>Enter a UPC or scan a barcode to auto-fill details from product databases.</p>
+            </div>
+          </div>
+          <div class="lookup-row">
+            <input type="text" name="upc" id="upcInput" placeholder="UPC / EAN / ISBN (e.g. 008421040100)" />
+            <button type="button" class="btn btn-accent" id="upcLookup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              Lookup
+            </button>
+            <button type="button" class="btn btn-ghost" id="upcScan" title="Scan with camera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8h10v8H7z"/></svg>
+            </button>
+          </div>
+          <div class="lookup-status" id="upcStatus"></div>
+        </div>
+
         <div class="field-grid">
           <div class="field field-span-2">
             <label>Item Name <span class="req">*</span></label>
-            <input type="text" name="name" required placeholder='e.g. "Princess" the Bear' />
+            <div class="input-with-suggest">
+              <input type="text" name="name" id="nameInput" required placeholder='e.g. "Princess" the Bear' autocomplete="off" />
+              <div class="suggest-dropdown" id="beanieSuggest"></div>
+            </div>
+            <small id="nameHint" class="field-hint"></small>
           </div>
           <div class="field">
             <label>Category <span class="req">*</span></label>
@@ -170,11 +215,11 @@
               <input type="text" name="sku" required placeholder="BB-0001" />
               <button type="button" class="btn-mini" id="autoSku">Auto</button>
             </div>
-            <small>Physically mark this on the package</small>
+            <small>Physically mark this on the package.</small>
           </div>
           <div class="field">
             <label>Brand / Maker</label>
-            <input type="text" name="brand" placeholder="Ty Inc., Nike, etc." />
+            <input type="text" name="brand" placeholder="Ty Inc., Nike, …" />
           </div>
           <div class="field">
             <label>Model / Style</label>
@@ -194,7 +239,7 @@
           </div>
           <div class="field">
             <label>Country of Manufacture</label>
-            <input type="text" name="country" placeholder="China, Indonesia…" />
+            <input type="text" name="country" placeholder="China, Indonesia, …" />
           </div>
           <div class="field">
             <label>Storage Location</label>
@@ -211,8 +256,27 @@
       <section class="tab-panel" data-panel="beanie">
         <div class="panel-intro">
           <h3>Beanie Baby Specific Details</h3>
-          <p>Tag information dramatically affects value. Be meticulous.</p>
+          <p>Tag information dramatically affects value. Use the auto-fill from the name search in Basics to populate most of these instantly.</p>
         </div>
+
+        <div class="lookup-card lookup-card-inline">
+          <div class="lookup-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <div>
+              <h4>Fill from Reference Database</h4>
+              <p>Search our database of 60+ popular Beanies, or add your own entries for reuse.</p>
+            </div>
+          </div>
+          <div class="lookup-row">
+            <input type="text" id="beanieLookupInput" placeholder="Search: Princess, Patti, Peanut…" />
+            <button type="button" class="btn btn-ghost" id="saveBeanieBtn" title="Save current info as a reusable reference entry">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              Save to DB
+            </button>
+          </div>
+          <div class="beanie-results" id="beanieLookupResults"></div>
+        </div>
+
         <div class="field-grid">
           <div class="field">
             <label>Year Released</label>
@@ -224,7 +288,7 @@
           </div>
           <div class="field field-span-2">
             <label>Tag Poem / Text</label>
-            <textarea name="bb_poem" rows="3" placeholder="Transcribe the poem from the heart tag…"></textarea>
+            <textarea name="bb_poem" rows="4" placeholder="Transcribe the poem from the heart tag…"></textarea>
           </div>
 
           <div class="field">
@@ -297,11 +361,11 @@
 
           <div class="field field-span-2">
             <label>Known Errors / Variations <small>(these can multiply value)</small></label>
-            <textarea name="bb_errors" rows="2" placeholder='e.g. "Surface" misspelled as "Surfac", missing embroidery, color variation, canadian tush tag…'></textarea>
+            <textarea name="bb_errors" rows="2" placeholder='e.g. misspelled word, missing embroidery, color variation, Canadian tush tag…'></textarea>
           </div>
           <div class="field field-span-2">
             <label>Retirement / Rarity Notes</label>
-            <textarea name="bb_rarity" rows="2" placeholder="Retired date, 1st edition, hologram tag, limited release details…"></textarea>
+            <textarea name="bb_rarity" rows="2" placeholder="Retirement date, 1st edition, hologram tag, limited release details…"></textarea>
           </div>
         </div>
       </section>
@@ -324,7 +388,7 @@
           </div>
           <div class="field field-span-2">
             <label>Condition Notes / Flaws</label>
-            <textarea name="condition_notes" rows="4" placeholder="List every flaw honestly: pilling, stains, missing tags, discoloration, loose thread at left paw…"></textarea>
+            <textarea name="condition_notes" rows="4" placeholder="List every flaw honestly — pilling, stains, missing tags, discoloration, loose thread at left paw…"></textarea>
           </div>
           <div class="field">
             <label>Has Original Packaging?</label>
@@ -347,7 +411,7 @@
           </div>
           <div class="field field-span-2">
             <label>Authentication / Verification</label>
-            <input type="text" name="authentication" placeholder='e.g. "True Blue Beans authenticated", photo-matched, etc.' />
+            <input type="text" name="authentication" placeholder='e.g. "True Blue Beans authenticated", photo-matched, …' />
           </div>
         </div>
       </section>
@@ -356,7 +420,7 @@
       <section class="tab-panel" data-panel="listing">
         <div class="field-grid">
           <div class="field field-span-2">
-            <label>Listing Title <small>(what buyers see — Poshmark allows 50 char, eBay 80)</small></label>
+            <label>Listing Title <small>— what buyers see (Poshmark 50 char / eBay 80 char)</small></label>
             <input type="text" name="listing_title" maxlength="80" placeholder='e.g. "VTG 1997 Ty Princess Diana Beanie Baby PVC Pellets Mint"' />
             <small class="char-count" id="titleCount">0 / 80</small>
           </div>
@@ -365,11 +429,11 @@
             <textarea name="listing_desc" rows="6" placeholder="Full description for marketplaces. Include all details, condition, measurements, shipping info."></textarea>
           </div>
           <div class="field field-span-2">
-            <label>Tags / Keywords <small>(comma separated — for search visibility)</small></label>
+            <label>Tags / Keywords <small>— comma separated</small></label>
             <input type="text" name="tags" placeholder="vintage, 90s, beanie, ty, princess, rare, collectible" />
           </div>
           <div class="field">
-            <label>Cost of Goods (what you paid)</label>
+            <label>Cost of Goods</label>
             <input type="number" step="0.01" name="cost" placeholder="0.00" />
           </div>
           <div class="field">
@@ -442,17 +506,13 @@
           <div class="field">
             <label>Weight Unit</label>
             <select name="weight_unit">
-              <option>oz</option>
-              <option>lb</option>
-              <option>g</option>
-              <option>kg</option>
+              <option>oz</option><option>lb</option><option>g</option><option>kg</option>
             </select>
           </div>
           <div class="field">
             <label>Dim. Unit</label>
             <select name="dim_unit">
-              <option>in</option>
-              <option>cm</option>
+              <option>in</option><option>cm</option>
             </select>
           </div>
           <div class="field">
@@ -509,47 +569,47 @@
       <section class="tab-panel" data-panel="photos">
         <div class="panel-intro">
           <h3>Photos &amp; Additional Notes</h3>
-          <p>Photos are stored locally in your browser. For large libraries, export regularly.</p>
+          <p>Photos are stored locally. For large libraries, export regularly.</p>
         </div>
         <div class="field">
           <label>Upload Photos</label>
           <div class="photo-drop" id="photoDrop">
             <input type="file" id="photoInput" multiple accept="image/*" hidden />
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             <p>Drop images or <button type="button" class="link-btn" onclick="document.getElementById('photoInput').click()">browse</button></p>
           </div>
           <div class="photo-preview" id="photoPreview"></div>
         </div>
         <div class="field">
-          <label>Private Notes <small>(for your eyes only, not exported to listings)</small></label>
+          <label>Private Notes <small>— for your eyes only, not exported to listings</small></label>
           <textarea name="private_notes" rows="4" placeholder="Source, purchase date, research links, pricing history…"></textarea>
         </div>
       </section>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-ghost" id="deleteBtn" style="display:none">Delete</button>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none">Delete</button>
         <div style="flex:1"></div>
         <button type="button" class="btn btn-ghost" id="cancelBtn">Cancel</button>
         <button type="submit" class="btn btn-primary">Save Entry</button>
-      </div>
+      </footer>
     </form>
   </div>
 </div>
 
-<!-- ============== CONFIRM MODAL ============== -->
+<!-- ============ CONFIRM MODAL ============ -->
 <div class="modal mini-modal" id="confirmModal">
   <div class="modal-backdrop"></div>
   <div class="modal-card mini-card">
     <h3 id="confirmTitle">Confirm</h3>
     <p id="confirmMessage"></p>
-    <div class="modal-footer">
+    <footer class="modal-footer">
       <button class="btn btn-ghost" id="confirmCancel">Cancel</button>
       <button class="btn btn-danger" id="confirmOk">Confirm</button>
-    </div>
+    </footer>
   </div>
 </div>
 
-<!-- ============== IMPORT MODAL ============== -->
+<!-- ============ IMPORT MODAL ============ -->
 <div class="modal mini-modal" id="importModal">
   <div class="modal-backdrop"></div>
   <div class="modal-card mini-card">
@@ -560,20 +620,37 @@
       <label><input type="radio" name="importMode" value="merge" checked /> Merge with existing</label>
       <label><input type="radio" name="importMode" value="replace" /> Replace all existing</label>
     </div>
-    <div class="modal-footer">
+    <footer class="modal-footer">
       <button class="btn btn-ghost" id="importCancel">Cancel</button>
       <button class="btn btn-primary" id="importConfirm">Import</button>
-    </div>
+    </footer>
   </div>
 </div>
 
-<!-- ============== TOAST ============== -->
+<!-- ============ SCANNER MODAL ============ -->
+<div class="modal mini-modal" id="scannerModal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card mini-card">
+    <h3>Scan Barcode</h3>
+    <p id="scannerStatus">Position the barcode in front of your camera.</p>
+    <div class="scanner-wrap">
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <div class="scanner-overlay"></div>
+    </div>
+    <footer class="modal-footer">
+      <button class="btn btn-ghost" id="scannerClose">Cancel</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
 <div id="toast" class="toast"></div>
 
-<footer class="masthead-footer">
-  <p>The Ledger · Client-side inventory · Data stored locally in your browser · Export often</p>
+<footer class="site-footer">
+  <p>The Ledger · Client-side inventory · Data stored locally · Export often</p>
 </footer>
 
+<script src="beanie-db.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
