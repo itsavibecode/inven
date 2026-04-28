@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Firebase Storage security rules for The Ledger (inven)
+// ------------------------------------------------------
+// Each signed-in user can read and write only files under their own
+// /users/{their uid}/...   path.   Anonymous access is forbidden, and
+// per-file uploads are capped at 8 MiB to keep an inadvertently huge
+// upload from chewing through the free tier.
+//
+// To install: Firebase console -> Build -> Storage -> Rules,
+// paste this whole file, click Publish.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Per-user namespace.   Anything we write from the app lives under
+    // /users/{uid}/items/{itemId}/{photoId}, etc.
+    match /users/{userId}/{allPaths=**} {
+      allow read:  if request.auth != null
+                   && request.auth.uid == userId;
+
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 8 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId;
+    }
+
+    // Anything outside /users is denied by default (no fallthrough).
+  }
+}

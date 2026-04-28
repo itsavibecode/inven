@@ -343,7 +343,7 @@ function updateTitleCount() {
   }
 }
 
-function saveItem(e) {
+async function saveItem(e) {
   e.preventDefault();
   const form = document.getElementById('itemForm');
   const data = {};
@@ -378,10 +378,33 @@ function saveItem(e) {
     state.items.unshift(savedItem);
   }
   saveState();
-  if (savedItem) cloudSaveItemSafe(savedItem);
   closeEditor();
   render();
   toast('Saved', 'success');
+
+  if (savedItem && isSignedIn()) {
+    try {
+      const hasBase64 = (savedItem.photos || []).some(p => typeof p === 'string' && p.startsWith('data:'));
+      if (hasBase64 && window.firebaseStorageApi) {
+        const urls = await Promise.all((savedItem.photos || []).map(async (p) => {
+          if (typeof p === 'string' && p.startsWith('data:')) {
+            return await window.firebaseStorageApi.uploadPhoto(cloudUid, savedItem.id, p);
+          }
+          return p;
+        }));
+        savedItem.photos = urls;
+        const idx = state.items.findIndex(i => i.id === savedItem.id);
+        if (idx >= 0) state.items[idx].photos = urls;
+        saveState();
+        render();
+      }
+      cloudSaveItemSafe(savedItem);
+    } catch (err) {
+      console.error('Photo upload failed:', err);
+      toast('Photo upload failed — item saved to cloud without new photos', 'error');
+      cloudSaveItemSafe(savedItem);
+    }
+  }
 }
 
 async function deleteCurrentItem() {
@@ -394,6 +417,9 @@ async function deleteCurrentItem() {
   state.items = state.items.filter(i => i.id !== deletedId);
   saveState();
   cloudDeleteItemSafe(deletedId);
+  if (isSignedIn() && window.firebaseStorageApi) {
+    window.firebaseStorageApi.deleteItemPhotos(cloudUid, deletedId);
+  }
   closeEditor();
   render();
   toast('Item deleted', 'success');
