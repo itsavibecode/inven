@@ -105,17 +105,23 @@ function toast(msg, type = '') {
   toast._t = setTimeout(() => el.classList.remove('show'), 3400);
 }
 
-function confirmDialog(title, message) {
+function confirmDialog(title, message, options = {}) {
   return new Promise(resolve => {
     const modal = document.getElementById('confirmModal');
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMessage').textContent = message;
-    modal.classList.add('open');
     const ok = document.getElementById('confirmOk');
     const cancel = document.getElementById('confirmCancel');
+    ok.textContent = options.okLabel || 'Confirm';
+    cancel.textContent = options.cancelLabel || 'Cancel';
+    ok.className = 'btn ' + (options.okClass || 'btn-danger');
+    modal.classList.add('open');
     const cleanup = (result) => {
       modal.classList.remove('open');
       ok.onclick = null; cancel.onclick = null;
+      ok.textContent = 'Confirm';
+      ok.className = 'btn btn-danger';
+      cancel.textContent = 'Cancel';
       resolve(result);
     };
     ok.onclick = () => cleanup(true);
@@ -1023,8 +1029,16 @@ let cloudUid = null;
 let cloudUnsubItems = null;
 let cloudUnsubBeanies = null;
 let cloudUserBeanies = [];
+let cloudMigrationOffered = false;
 
 function isSignedIn() { return !!cloudUid; }
+
+function getLocalStorageItems() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
 
 function getEffectiveUserBeanies() {
   return isSignedIn() ? cloudUserBeanies.slice() : getUserBeanies();
@@ -1038,15 +1052,20 @@ function onCloudAuthChanged(user) {
 
   if (user) {
     cloudUid = user.uid;
+    cloudMigrationOffered = false;
     if (!window.firestoreApi) {
       console.warn('Firestore bridge not ready; skipping cloud subscription');
       return;
     }
     cloudUnsubItems = window.firestoreApi.subscribeItems(
       user.uid,
-      (items) => {
+      async (items) => {
         state.items = items.map(i => ({ ...DEFAULT_FIELDS, ...i }));
         render();
+        if (!cloudMigrationOffered) {
+          cloudMigrationOffered = true;
+          maybeOfferMigration();
+        }
       },
       (err) => {
         const code = err && err.code;
@@ -1063,8 +1082,79 @@ function onCloudAuthChanged(user) {
     );
   } else {
     cloudUid = null;
+    cloudMigrationOffered = false;
     loadState();
     render();
+  }
+}
+
+async function maybeOfferMigration() {
+  if (!isSignedIn()) return;
+
+  const localItems = getLocalStorageItems();
+  const cloudIds = new Set(state.items.map(i => i.id));
+  const localOnlyItems = localItems.filter(i => i && i.id && !cloudIds.has(i.id));
+
+  const localBeanies = (typeof getUserBeanies === 'function') ? getUserBeanies() : [];
+  const cloudBeanieKeys = new Set(cloudUserBeanies.map(b => slug(b.name || '')));
+  const localOnlyBeanies = localBeanies.filter(b => b && b.name && !cloudBeanieKeys.has(slug(b.name)));
+
+  if (localOnlyItems.length === 0 && localOnlyBeanies.length === 0) return;
+
+  const parts = [];
+  if (localOnlyItems.length > 0) parts.push(`${localOnlyItems.length} item${localOnlyItems.length === 1 ? '' : 's'}`);
+  if (localOnlyBeanies.length > 0) parts.push(`${localOnlyBeanies.length} custom Beanie reference${localOnlyBeanies.length === 1 ? '' : 's'}`);
+  const summary = parts.join(' and ');
+
+  const ok = await confirmDialog(
+    'Upload local data to your account?',
+    `Found ${summary} saved on this device that aren't in your cloud account yet. Upload now? Your local copy stays as a backup either way.`,
+    { okLabel: 'Upload', cancelLabel: 'Not Now', okClass: 'btn-primary' }
+  );
+  if (!ok) return;
+
+  toast(`Uploading ${summary}…`, '');
+  let itemsOk = 0, itemsFail = 0;
+  for (const item of localOnlyItems) {
+    try {
+      const toUpload = { ...item };
+      if (Array.isArray(item.photos) && item.photos.length > 0 && window.firebaseStorageApi) {
+        const urls = await Promise.all(item.photos.map(async (p) => {
+          if (typeof p === 'string' && p.startsWith('data:')) {
+            return await window.firebaseStorageApi.uploadPhoto(cloudUid, item.id, p);
+          }
+          return p;
+        }));
+        toUpload.photos = urls;
+      }
+      await window.firestoreApi.saveItem(cloudUid, toUpload);
+      itemsOk++;
+    } catch (err) {
+      console.error('Migration upload failed for item', item.id, err);
+      itemsFail++;
+    }
+  }
+
+  let beaniesOk = 0;
+  for (const beanie of localOnlyBeanies) {
+    try {
+      const key = slug(beanie.name);
+      if (key) {
+        await window.firestoreApi.saveBeanie(cloudUid, key, beanie);
+        beaniesOk++;
+      }
+    } catch (err) {
+      console.error('Migration upload failed for beanie', beanie.name, err);
+    }
+  }
+
+  if (itemsFail > 0) {
+    toast(`Uploaded ${itemsOk} of ${localOnlyItems.length} items (${itemsFail} failed — see console)`, 'error');
+  } else {
+    const summaryDone = [];
+    if (itemsOk > 0) summaryDone.push(`${itemsOk} item${itemsOk === 1 ? '' : 's'}`);
+    if (beaniesOk > 0) summaryDone.push(`${beaniesOk} Beanie reference${beaniesOk === 1 ? '' : 's'}`);
+    toast(`Uploaded ${summaryDone.join(' and ')} to your account`, 'success');
   }
 }
 
