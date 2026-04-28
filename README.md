@@ -4,6 +4,8 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
+Current version: **v0.1.0** — see [Changelog](#changelog) at the bottom for release history.
+
 ---
 
 ## What's new in this version
@@ -129,3 +131,11 @@ inventory/
 ```
 
 No `node_modules`. No build step. Just open and use.
+
+---
+
+## Changelog
+
+### v0.1.0 — Initial baseline (2026-04-27)
+
+First tagged release. Captures the state of the app as originally built and uploaded via the GitHub web UI on 2026-04-19. No behavior changes from that upload — this release just adds a visible version number in the site footer (`v0.1.0`), an `APP_VERSION` constant in `app.js` as the single source of truth, and this Changelog section. Intended as the clean starting point before adding multi-device sync, an iPhone barcode-scanner fallback, an expanded Beanie reference database, and other features tracked in future releases.

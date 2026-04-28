@@ -5,6 +5,8 @@
              Multi-format import/export
    ============================================================ */
 
+const APP_VERSION = '0.1.0';
+
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
 
@@ -962,6 +964,9 @@ function parseCSV(text) {
 // ============ WIRE UP ============
 function init() {
   loadState();
+
+  const verEl = document.getElementById('appVersion');
+  if (verEl) verEl.textContent = 'v' + APP_VERSION;
 
   document.getElementById('addBtn').onclick = () => openEditor();
   document.getElementById('modalClose').onclick = closeEditor;
