@@ -74,6 +74,97 @@ body {
 
 ::selection { background: var(--accent); color: var(--bg-0); }
 
+/* ============ AUTH BAR ============ */
+.auth-bar {
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+.auth-bar-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.45rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-2);
+}
+.auth-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+  box-shadow: 0 0 6px rgba(124,135,148,0.3);
+  flex-shrink: 0;
+  transition: background 200ms, box-shadow 200ms;
+}
+.auth-bar.signed-in .auth-dot {
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(45,212,191,0.5);
+}
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 150ms, color 150ms;
+}
+.btn-link:hover {
+  background: var(--accent-dim);
+  color: var(--accent-hover);
+}
+.btn-link[disabled] {
+  color: var(--text-3);
+  cursor: not-allowed;
+}
+.btn-link[disabled]:hover {
+  background: none;
+}
+.auth-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.7rem;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-1);
+}
+.auth-pill[hidden] { display: none; }
+.auth-pill-name {
+  font-weight: 500;
+  color: var(--text-0);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .auth-bar-inner { padding: 0.45rem 1rem; }
+  .auth-status-text { display: none; }
+  .auth-pill-name { max-width: 110px; }
+}
+
 /* ============ HEADER ============ */
 .header {
   padding: 1.75rem 2rem 1.25rem;

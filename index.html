@@ -13,6 +13,26 @@
 </head>
 <body>
 
+<!-- ============ AUTH BAR ============ -->
+<div class="auth-bar">
+  <div class="auth-bar-inner">
+    <div class="auth-status" id="authStatus">
+      <span class="auth-dot" aria-hidden="true"></span>
+      <span class="auth-status-text">Guest mode &middot; data stored locally on this device</span>
+    </div>
+    <div class="auth-actions">
+      <button type="button" class="btn-link" id="signInBtn">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 11v2.4h5.7c-.3 1.4-1.7 4-5.7 4-3.4 0-6.2-2.8-6.2-6.4S8.6 4.6 12 4.6c2 0 3.3.8 4 1.6l2.7-2.6C17 2 14.7 1 12 1 5.9 1 1 6 1 12s4.9 11 11 11c6.3 0 10.5-4.4 10.5-10.7 0-.7-.1-1.3-.2-1.9H12z"/></svg>
+        Sign in with Google to sync
+      </button>
+      <div class="auth-pill" id="signedInPill" hidden>
+        <span class="auth-pill-name" id="userName"></span>
+        <button type="button" class="btn-link" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ============ HEADER ============ -->
 <header class="header">
   <div class="header-inner">
@@ -650,6 +670,7 @@
   <p>The Ledger · Client-side inventory · Data stored locally · Export often · <span id="appVersion">v0.1.0</span></p>
 </footer>
 
+<script type="module" src="firebase-config.js"></script>
 <script src="beanie-db.js"></script>
 <script src="app.js"></script>
 </body>

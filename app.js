@@ -962,11 +962,78 @@ function parseCSV(text) {
 }
 
 // ============ WIRE UP ============
+// ============ AUTH UI ============
+function renderAuthState(user) {
+  const bar = document.querySelector('.auth-bar');
+  const signInBtn = document.getElementById('signInBtn');
+  const pill = document.getElementById('signedInPill');
+  const statusText = document.querySelector('.auth-status-text');
+  const userName = document.getElementById('userName');
+
+  if (user) {
+    bar.classList.add('signed-in');
+    signInBtn.hidden = true;
+    pill.hidden = false;
+    userName.textContent = user.displayName || user.email || 'Account';
+    statusText.textContent = 'Signed in · sync coming online';
+  } else {
+    bar.classList.remove('signed-in');
+    signInBtn.hidden = false;
+    pill.hidden = true;
+    userName.textContent = '';
+    statusText.textContent = 'Guest mode · data stored locally on this device';
+  }
+}
+
+function wireAuthUI() {
+  const signInBtn = document.getElementById('signInBtn');
+  const signOutBtn = document.getElementById('signOutBtn');
+
+  signInBtn.onclick = async () => {
+    if (!window.firebaseSignIn) {
+      toast('Sign-in not loaded yet, try again in a moment', 'error');
+      return;
+    }
+    signInBtn.disabled = true;
+    try {
+      await window.firebaseSignIn();
+    } catch (err) {
+      const code = err && err.code;
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        // user dismissed — silent
+      } else if (code === 'auth/popup-blocked') {
+        toast('Popup blocked. Allow popups for this site and try again.', 'error');
+      } else {
+        toast('Sign-in failed. Check your connection and try again.', 'error');
+      }
+    } finally {
+      signInBtn.disabled = false;
+    }
+  };
+
+  signOutBtn.onclick = async () => {
+    if (!window.firebaseSignOut) return;
+    try {
+      await window.firebaseSignOut();
+      toast('Signed out', 'success');
+    } catch (err) {
+      toast('Sign-out failed', 'error');
+    }
+  };
+
+  window.addEventListener('firebaseAuthChanged', (e) => renderAuthState(e.detail));
+  window.addEventListener('firebaseAuthError', (e) => {
+    console.error('Firebase auth error:', e.detail);
+  });
+}
+
 function init() {
   loadState();
 
   const verEl = document.getElementById('appVersion');
   if (verEl) verEl.textContent = 'v' + APP_VERSION;
+
+  wireAuthUI();
 
   document.getElementById('addBtn').onclick = () => openEditor();
   document.getElementById('modalClose').onclick = closeEditor;
