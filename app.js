@@ -5,7 +5,7 @@
              Multi-format import/export
    ============================================================ */
 
-const APP_VERSION = '0.2.1';
+const APP_VERSION = '0.3.0';
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
@@ -20,17 +20,21 @@ const DEFAULT_FIELDS = {
   bb_swing_cond: 'Mint (no creases/bends)', bb_tush_cond: 'Mint',
   bb_style_num: '', bb_pellets: '',
   bb_errors: '', bb_rarity: '',
+  // Variations (each one is unique — tye-dye, hand-painted, color-varied)
+  has_variations: false, variation_description: '',
   // Condition
   condition: 'Like New / Excellent Used', condition_notes: '',
   has_packaging: 'No',
   environment: 'Smoke-free & Pet-free home',
   authentication: '',
   // Listing
-  listing_title: '', listing_desc: '', tags: '',
+  listing_title: '', listing_desc: '',
+  listing_desc_ebay: '', listing_desc_poshmark: '',
+  tags: '',
   cost: '', price: '', min_price: '', sold_price: '',
   status: 'Draft', sold_platform: '',
   date_listed: '', date_sold: '',
-  url_poshmark: '', url_ebay: '',
+  url_poshmark: '', url_ebay: '', ebay_item_number: '',
   // Shipping
   weight_value: '', weight_unit: 'oz', dim_unit: 'in',
   box_length: '', box_width: '', box_height: '',
@@ -283,6 +287,22 @@ function applyFilters(items) {
 }
 
 // ============ EDITOR ============
+function setFieldValue(el, value) {
+  if (!el || el.type === 'file') return;
+  if (el.type === 'checkbox') {
+    el.checked = !!value;
+  } else {
+    el.value = value ?? '';
+  }
+}
+
+function syncVariationFieldVisibility() {
+  const toggle = document.getElementById('hasVariationsToggle');
+  const field = document.getElementById('variationDescField');
+  if (!toggle || !field) return;
+  field.style.display = toggle.checked ? '' : 'none';
+}
+
 function openEditor(id = null) {
   const modal = document.getElementById('itemModal');
   const form = document.getElementById('itemForm');
@@ -304,8 +324,7 @@ function openEditor(id = null) {
     document.getElementById('modalTitle').textContent = item.name || 'Untitled';
     document.getElementById('deleteBtn').style.display = '';
     Object.entries(item).forEach(([k, v]) => {
-      const el = form.elements[k];
-      if (el && el.type !== 'file') el.value = v ?? '';
+      setFieldValue(form.elements[k], v);
     });
     state.currentPhotos = [...(item.photos || [])];
   } else {
@@ -315,12 +334,18 @@ function openEditor(id = null) {
     document.getElementById('deleteBtn').style.display = 'none';
     Object.entries(DEFAULT_FIELDS).forEach(([k, v]) => {
       const el = form.elements[k];
-      if (el && el.type !== 'file' && v !== '' && v != null) el.value = v;
+      if (!el) return;
+      if (el.type === 'checkbox') {
+        el.checked = !!v;
+      } else if (el.type !== 'file' && v !== '' && v != null) {
+        el.value = v;
+      }
     });
     form.elements.sku.value = nextSku(form.elements.category.value);
   }
 
   toggleBeanieTab(form.elements.category.value);
+  syncVariationFieldVisibility();
   renderPhotoPreview();
   updateTitleCount();
   modal.classList.add('open');
@@ -355,7 +380,7 @@ async function saveItem(e) {
   const data = {};
   Array.from(form.elements).forEach(el => {
     if (!el.name) return;
-    data[el.name] = el.value;
+    data[el.name] = (el.type === 'checkbox') ? el.checked : el.value;
   });
 
   if (!data.name.trim()) { toast('Name is required', 'error'); return; }
@@ -810,7 +835,7 @@ function exportPoshmark() {
     if (i.min_price) lines.push(`MIN ACCEPT: ${formatMoney(i.min_price)}`);
     lines.push('');
     lines.push('DESCRIPTION:');
-    lines.push(buildDescription(i));
+    lines.push(buildDescription(i, 'poshmark'));
     lines.push('');
     if (i.tags) lines.push(`TAGS: ${i.tags}`);
     lines.push('');
@@ -846,7 +871,7 @@ function exportEbay() {
     return [
       'Add', i.sku, '', i.listing_title || i.name,
       conditionMap[i.condition] || '3000',
-      buildDescription(i).replace(/\n/g, '<br>'),
+      buildDescription(i, 'ebay').replace(/\n/g, '<br>'),
       '', i.quantity || 1, 'FixedPrice', i.price || '', 'GTC',
       '', 'USPSGroundAdvantage', i.ship_cost || '',
       '1', 'ReturnsAccepted', i.brand || '', i.upc || '',
@@ -860,9 +885,16 @@ function exportEbay() {
   toast(`${listable.length} eBay listings prepared`, 'success');
 }
 
-function buildDescription(i) {
+function buildDescription(i, platform) {
   const parts = [];
-  if (i.listing_desc) {
+  // Prefer platform-specific description when present, then the shared
+  // listing_desc, then fall back to auto-generated lead text.
+  const platformDesc = platform === 'ebay' ? i.listing_desc_ebay
+                     : platform === 'poshmark' ? i.listing_desc_poshmark
+                     : '';
+  if (platformDesc) {
+    parts.push(platformDesc);
+  } else if (i.listing_desc) {
     parts.push(i.listing_desc);
   } else {
     parts.push(`${i.name}${i.brand ? ' by ' + i.brand : ''}`);
@@ -888,6 +920,11 @@ function buildDescription(i) {
     if (i.material) parts.push(`• Material: ${i.material}`);
     if (i.country) parts.push(`• Country of Manufacture: ${i.country}`);
     if (i.upc) parts.push(`• UPC: ${i.upc}`);
+  }
+  if (i.has_variations && i.variation_description) {
+    parts.push(`• Variation: ${i.variation_description}`);
+  } else if (i.has_variations) {
+    parts.push(`• Variation: each one is unique — colors and patterns vary`);
   }
   parts.push(`• Condition: ${i.condition}`);
   if (i.condition_notes) parts.push(`• Flaws/Notes: ${i.condition_notes}`);
@@ -1266,6 +1303,9 @@ function init() {
     document.querySelector('[name="sku"]').value = nextSku(cat);
   };
   document.querySelector('[name="listing_title"]').addEventListener('input', updateTitleCount);
+
+  const hasVarToggle = document.getElementById('hasVariationsToggle');
+  if (hasVarToggle) hasVarToggle.addEventListener('change', syncVariationFieldVisibility);
 
   // UPC lookup
   document.getElementById('upcLookup').onclick = () => {

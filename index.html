@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=0.2.1" />
+<link rel="stylesheet" href="styles.css?v=0.3.0" />
 </head>
 <body>
 
@@ -269,6 +269,16 @@
             <label>Quantity</label>
             <input type="number" name="quantity" value="1" min="1" />
           </div>
+          <div class="field field-span-2">
+            <label class="checkbox-label">
+              <input type="checkbox" name="has_variations" id="hasVariationsToggle" />
+              <span>Each one is unique &mdash; colors / patterns vary (tye-dye, hand-painted, etc.)</span>
+            </label>
+          </div>
+          <div class="field field-span-2" id="variationDescField" style="display:none;">
+            <label>Variation Notes <small>&mdash; what differs between examples</small></label>
+            <input type="text" name="variation_description" placeholder='e.g. "purple/blue tye-dye, swirl pattern unique to each"' />
+          </div>
         </div>
       </section>
 
@@ -445,8 +455,16 @@
             <small class="char-count" id="titleCount">0 / 80</small>
           </div>
           <div class="field field-span-2">
-            <label>Listing Description</label>
-            <textarea name="listing_desc" rows="6" placeholder="Full description for marketplaces. Include all details, condition, measurements, shipping info."></textarea>
+            <label>Shared Listing Description <small>&mdash; default used when a platform-specific description is empty</small></label>
+            <textarea name="listing_desc" rows="5" placeholder="Default description used for both platforms. Include all details, condition, measurements, shipping info."></textarea>
+          </div>
+          <div class="field field-span-2">
+            <label>eBay Description <small>&mdash; overrides shared when present</small></label>
+            <textarea name="listing_desc_ebay" rows="4" placeholder='Optional. eBay-specific copy &mdash; e.g. more detail-heavy, condition-focused.'></textarea>
+          </div>
+          <div class="field field-span-2">
+            <label>Poshmark Description <small>&mdash; overrides shared when present</small></label>
+            <textarea name="listing_desc_poshmark" rows="4" placeholder='Optional. Poshmark-specific copy &mdash; e.g. more conversational, hashtag-friendly.'></textarea>
           </div>
           <div class="field field-span-2">
             <label>Tags / Keywords <small>— comma separated</small></label>
@@ -508,6 +526,10 @@
           <div class="field">
             <label>eBay Listing URL</label>
             <input type="url" name="url_ebay" placeholder="https://ebay.com/itm/…" />
+          </div>
+          <div class="field">
+            <label>eBay Item Number</label>
+            <input type="text" name="ebay_item_number" placeholder="e.g. 285123456789" />
           </div>
         </div>
       </section>
@@ -667,15 +689,15 @@
 <div id="toast" class="toast"></div>
 
 <footer class="site-footer">
-  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.2.1</span></p>
+  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.3.0</span></p>
 </footer>
 
 <!-- Cache-bust query string. Bump these (along with the styles.css link
      above) whenever a release ships new JS or CSS, so users on a stale
      browser cache get the new file. The value should match APP_VERSION
      in app.js. -->
-<script type="module" src="firebase-config.js?v=0.2.1"></script>
-<script src="beanie-db.js?v=0.2.1"></script>
-<script src="app.js?v=0.2.1"></script>
+<script type="module" src="firebase-config.js?v=0.3.0"></script>
+<script src="beanie-db.js?v=0.3.0"></script>
+<script src="app.js?v=0.3.0"></script>
 </body>
 </html>

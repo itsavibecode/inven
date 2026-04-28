@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.2.1** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.3.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -149,6 +149,18 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.3.0 — Variation flag, per-platform descriptions, eBay item # (2026-04-28)
+
+Three schema additions tracked from the original 2026-04-19 design notes.
+
+A `has_variations` checkbox in the Basics tab marks items where each example differs (tye-dye, hand-painted, color-varied) plus an optional `variation_description` text field for the specifics. When set, the auto-built description includes a "Variation: …" line so listings make the uniqueness explicit. The variation description field hides itself unless the checkbox is on, so the form stays clean for non-varied items.
+
+The single Listing Description has split into three: a shared one (the existing default, used when nothing platform-specific is set) plus optional eBay-only and Poshmark-only overrides. eBay tends to want detailed, condition-focused copy; Poshmark tends to want shorter, hashtag-friendly copy. The Poshmark TXT export uses the Poshmark override; the eBay File Exchange CSV uses the eBay override; both fall back to the shared description when their override is empty, so existing items keep working without migration.
+
+Adds an explicit `ebay_item_number` field next to the eBay listing URL — useful when the URL alone isn't enough to find the listing in Seller Hub.
+
+The form save now correctly handles checkboxes (the checked state, not the `value` attribute), and openEditor populates checkboxes via `.checked` rather than `.value`. Existing items missing the new fields fall through to default empty/false values without any explicit migration.
 
 ### v0.2.1 — Sign-in UI and Beanie DB autofill fixes (2026-04-28)
 
