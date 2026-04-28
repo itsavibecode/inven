@@ -139,6 +139,7 @@ body {
 .btn-link[disabled]:hover {
   background: none;
 }
+.btn-link[hidden] { display: none; }
 .auth-pill {
   display: inline-flex;
   align-items: center;

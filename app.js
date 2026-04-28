@@ -5,7 +5,7 @@
              Multi-format import/export
    ============================================================ */
 
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.2.1';
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
@@ -675,8 +675,10 @@ function fillFromBeanieEntry(entry) {
     const el = form.elements[name];
     if (el && !el.value) el.value = val;
   };
-  // Always set name if empty
-  setIfEmpty('name', entry.name);
+  // Name is ALWAYS replaced with the canonical DB value — the user's partial
+  // typing (which triggered the suggest in the first place) shouldn't win
+  // over the entry they just clicked on.
+  if (entry.name) form.elements.name.value = entry.name;
   setIfEmpty('bb_year', entry.year);
   setIfEmpty('bb_birthday', entry.birthday);
   setIfEmpty('bb_poem', entry.poem);

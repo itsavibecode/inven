@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.2.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.2.1** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -149,6 +149,10 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.2.1 — Sign-in UI and Beanie DB autofill fixes (2026-04-28)
+
+Two small bugs surfaced on first real sign-in test in v0.2.0. The "Sign in with Google" button stayed visible alongside the signed-in pill because `.btn-link`'s `display: inline-flex` was beating the user-agent `[hidden] { display: none }` rule — added an explicit `.btn-link[hidden] { display: none; }` so `signInBtn.hidden = true` actually hides it. Clicking a Beanie DB suggestion didn't replace the partial name the user had typed to trigger the suggest in the first place — `setIfEmpty('name', entry.name)` was a no-op because the field wasn't empty. The name is now always replaced with the canonical DB entry name (other fields keep the setIfEmpty behavior so the user's manual entries aren't clobbered).
 
 ### v0.2.0 — Google sign-in and multi-device sync (2026-04-28)
 

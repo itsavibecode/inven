@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="styles.css?v=0.2.1" />
 </head>
 <body>
 
@@ -667,14 +667,15 @@
 <div id="toast" class="toast"></div>
 
 <footer class="site-footer">
-  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.2.0</span></p>
+  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.2.1</span></p>
 </footer>
 
-<!-- Cache-bust query string. Bump these whenever a release ships new JS,
-     so users on a stale browser cache get the new file. The value should
-     match APP_VERSION in app.js. -->
-<script type="module" src="firebase-config.js?v=0.2.0"></script>
-<script src="beanie-db.js?v=0.2.0"></script>
-<script src="app.js?v=0.2.0"></script>
+<!-- Cache-bust query string. Bump these (along with the styles.css link
+     above) whenever a release ships new JS or CSS, so users on a stale
+     browser cache get the new file. The value should match APP_VERSION
+     in app.js. -->
+<script type="module" src="firebase-config.js?v=0.2.1"></script>
+<script src="beanie-db.js?v=0.2.1"></script>
+<script src="app.js?v=0.2.1"></script>
 </body>
 </html>
