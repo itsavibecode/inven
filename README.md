@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.1.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.2.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -97,10 +97,24 @@ Just double-click `index.html`. Works offline (UPC lookup needs internet, but ev
 
 ## Data & storage
 
-- All inventory is stored in your browser's **localStorage**. Nothing is sent to any server (except UPC lookups, which hit Open Food Facts and Open Library anonymously).
+The Ledger has two storage modes — pick whichever fits how you use it.
+
+### Guest mode (default)
+- Everything lives in your browser's **localStorage**. Nothing leaves the device except anonymous UPC lookups to Open Food Facts and Open Library.
 - **Export regularly** — if you clear browser data or switch devices, you lose everything without a backup.
-- Your custom Beanie DB entries are included in JSON backups.
-- localStorage typically caps around 5-10 MB per site. Photos are auto-compressed.
+- Custom Beanie DB entries are included in JSON backups.
+- localStorage typically caps around 5–10 MB per site. Photos are auto-compressed.
+
+### Signed-in mode (optional)
+- Click **"Sign in with Google to sync"** at the top. Inventory items and your custom Beanie DB entries sync to **Cloud Firestore** in real time across every device you're signed in on. Photos sync to **Firebase Storage**.
+- Your data lives at `/users/{your uid}/...` in Firebase, locked to you by Firestore and Storage rules — no other account can see it.
+- The first time you sign in on a device that already has guest-mode items, you're prompted to upload them to your account in a single click. Your local copy stays as a backup either way.
+- Sign out at any time to drop back to guest mode. localStorage isn't cleared on sign-out.
+- **Browser cache caveat:** if you ship a new release, bump the cache-bust query strings on the script tags in `index.html` (the `?v=…` part) so users on a stale browser cache get the new JS.
+
+### Self-hosting (forking)
+
+The committed `firebase-config.js` points at itsavibecode's Firebase project. If you fork this repo and want your own backend, replace that file with your project's config and paste both `firestore.rules` and `storage.rules` into your Firebase console. Sign-in still works against the original project until you swap the config — useful for trying it out.
 
 ---
 
@@ -135,6 +149,20 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.2.0 — Google sign-in and multi-device sync (2026-04-28)
+
+Adds optional Google sign-in. When signed in, all inventory items and any custom Beanie DB entries sync to Cloud Firestore in real time, and photos sync to Firebase Storage — open the app on a phone, laptop, or tablet, and your collection follows you. A slim auth bar above the header shows the current state and exposes the sign-in/out controls. Guest mode is unchanged: data stays in localStorage and nothing is sent off-device, so you can still use the app without an account.
+
+The first time you sign in on a device with existing guest-mode items, the app counts the items and Beanie DB entries that aren't already in your account and prompts to upload them in one click. Your local copy stays as a backup either way. The prompt only fires once per sign-in.
+
+To set up sync the first time, paste `firestore.rules` and `storage.rules` (committed at the repo root) into the Firebase console — Firestore Database → Rules and Storage → Rules respectively. Both lock each user to their own `/users/{uid}/...` subtree, deny anonymous access, and have no fallthrough rule, so anything outside that namespace is implicitly denied. Storage uploads are constrained to image/* and capped at 8 MiB to keep accidental large uploads from chewing through the free tier.
+
+Photos taken in guest mode stay device-local in localStorage until you sign in and migrate; once uploaded to Storage, the app stores download URLs in the Firestore doc rather than base64 (URLs are tiny and stay well under the 1 MiB document cap regardless of photo count). Item delete fans out a best-effort cleanup of the matching Storage folder so orphan blobs don't pile up.
+
+Adds cache-busting `?v=` query strings to all local script tags in `index.html`. Bump them alongside `APP_VERSION` on each release that ships JS changes, so users on a stale browser cache get the new files.
+
+Known limits: photo sync requires Firebase's Blaze (pay-as-you-go) plan, but the free tier (5 GB storage, 1 GB/day download) covers a personal inventory at this scale with no charge in expected use; set a $1 budget alert in the Firebase console for peace of mind. iPhone Safari/Chrome still can't run the native barcode scanner — that's a known issue tracked for a later release with a JS fallback library.
 
 ### v0.1.0 — Initial baseline (2026-04-27)
 
