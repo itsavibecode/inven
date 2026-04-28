@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Cloud Firestore security rules for The Ledger (inven)
+// ----------------------------------------------------
+// Each signed-in user can read and write only their own documents under
+// /users/{their uid}/...   No cross-account reads or writes are possible,
+// and no anonymous access is allowed at all.
+//
+// To install: Firebase console -> Build -> Firestore Database -> Rules,
+// paste this whole file, click Publish.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Locked-down per-user namespace for items, beanieDb, profile, etc.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // Anything outside /users is denied by default (no fallthrough rule).
+  }
+}

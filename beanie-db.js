@@ -532,8 +532,10 @@ const BEANIE_DB = [
 function searchBeanieDB(query) {
   if (!query) return [];
   const q = query.toLowerCase().trim();
-  // Combine seed DB + any user-added entries
-  const userEntries = getUserBeanies();
+  // Combine seed DB + any user-added entries (cloud when signed in, else local)
+  const userEntries = (typeof window !== 'undefined' && typeof window.getEffectiveUserBeanies === 'function')
+    ? window.getEffectiveUserBeanies()
+    : getUserBeanies();
   const all = [...BEANIE_DB, ...userEntries];
 
   const exact = all.filter(b => b.name.toLowerCase() === q);

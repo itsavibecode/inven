@@ -14,6 +14,17 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzKrob4KDq_BNe-cz7-9pI2Zib7yvTvKs",
@@ -26,9 +37,44 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 window.firebaseAuth = auth;
+window.firebaseDb = db;
+
+// Strip the photos array from items before writing to Firestore — photos
+// can blow past Firestore's 1 MiB document cap. They are handled separately
+// by Firebase Storage in a later commit. Until then photos remain device-
+// local in localStorage even when signed in.
+function stripForCloud(item) {
+  const { photos, ...rest } = item;
+  return rest;
+}
+
+window.firestoreApi = {
+  saveItem: (uid, item) => setDoc(
+    doc(db, 'users', uid, 'items', item.id),
+    stripForCloud(item)
+  ),
+  deleteItem: (uid, itemId) => deleteDoc(doc(db, 'users', uid, 'items', itemId)),
+  saveBeanie: (uid, key, entry) => setDoc(doc(db, 'users', uid, 'beanieDb', key), entry),
+  deleteBeanie: (uid, key) => deleteDoc(doc(db, 'users', uid, 'beanieDb', key)),
+  fetchAllItems: async (uid) => {
+    const snap = await getDocs(collection(db, 'users', uid, 'items'));
+    return snap.docs.map(d => d.data());
+  },
+  subscribeItems: (uid, cb, errCb) => onSnapshot(
+    query(collection(db, 'users', uid, 'items'), orderBy('created_at', 'desc')),
+    (snap) => cb(snap.docs.map(d => d.data())),
+    (err) => { if (errCb) errCb(err); else console.error('items snapshot error:', err); }
+  ),
+  subscribeBeanies: (uid, cb, errCb) => onSnapshot(
+    collection(db, 'users', uid, 'beanieDb'),
+    (snap) => cb(snap.docs.map(d => d.data())),
+    (err) => { if (errCb) errCb(err); else console.error('beanies snapshot error:', err); }
+  )
+};
 
 window.firebaseSignIn = async function() {
   try {

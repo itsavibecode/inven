@@ -360,6 +360,7 @@ function saveItem(e) {
   data.quantity = parseInt(data.quantity, 10) || 1;
   data.photos = state.currentPhotos;
 
+  let savedItem;
   if (state.currentEditId) {
     const idx = state.items.findIndex(i => i.id === state.currentEditId);
     if (idx >= 0) {
@@ -367,14 +368,17 @@ function saveItem(e) {
       data.created_at = state.items[idx].created_at || nowISO();
       data.updated_at = nowISO();
       state.items[idx] = { ...DEFAULT_FIELDS, ...state.items[idx], ...data };
+      savedItem = state.items[idx];
     }
   } else {
     data.id = uid();
     data.created_at = nowISO();
     data.updated_at = nowISO();
-    state.items.unshift({ ...DEFAULT_FIELDS, ...data });
+    savedItem = { ...DEFAULT_FIELDS, ...data };
+    state.items.unshift(savedItem);
   }
   saveState();
+  if (savedItem) cloudSaveItemSafe(savedItem);
   closeEditor();
   render();
   toast('Saved', 'success');
@@ -386,8 +390,10 @@ async function deleteCurrentItem() {
   if (!item) return;
   const ok = await confirmDialog('Delete Item', `Permanently delete "${item.name}"? This cannot be undone.`);
   if (!ok) return;
-  state.items = state.items.filter(i => i.id !== state.currentEditId);
+  const deletedId = state.currentEditId;
+  state.items = state.items.filter(i => i.id !== deletedId);
   saveState();
+  cloudDeleteItemSafe(deletedId);
   closeEditor();
   render();
   toast('Item deleted', 'success');
@@ -675,6 +681,7 @@ function saveCurrentAsBeanie() {
     custom: true
   };
   saveUserBeanie(entry);
+  cloudSaveBeanieSafe(entry);
   toast(`"${name}" saved to your reference DB`, 'success');
 }
 
@@ -975,7 +982,7 @@ function renderAuthState(user) {
     signInBtn.hidden = true;
     pill.hidden = false;
     userName.textContent = user.displayName || user.email || 'Account';
-    statusText.textContent = 'Signed in · sync coming online';
+    statusText.textContent = 'Signed in · syncing across devices';
   } else {
     bar.classList.remove('signed-in');
     signInBtn.hidden = false;
@@ -983,6 +990,81 @@ function renderAuthState(user) {
     userName.textContent = '';
     statusText.textContent = 'Guest mode · data stored locally on this device';
   }
+}
+
+// ============ CLOUD SYNC ============
+let cloudUid = null;
+let cloudUnsubItems = null;
+let cloudUnsubBeanies = null;
+let cloudUserBeanies = [];
+
+function isSignedIn() { return !!cloudUid; }
+
+function getEffectiveUserBeanies() {
+  return isSignedIn() ? cloudUserBeanies.slice() : getUserBeanies();
+}
+window.getEffectiveUserBeanies = getEffectiveUserBeanies;
+
+function onCloudAuthChanged(user) {
+  if (cloudUnsubItems) { cloudUnsubItems(); cloudUnsubItems = null; }
+  if (cloudUnsubBeanies) { cloudUnsubBeanies(); cloudUnsubBeanies = null; }
+  cloudUserBeanies = [];
+
+  if (user) {
+    cloudUid = user.uid;
+    if (!window.firestoreApi) {
+      console.warn('Firestore bridge not ready; skipping cloud subscription');
+      return;
+    }
+    cloudUnsubItems = window.firestoreApi.subscribeItems(
+      user.uid,
+      (items) => {
+        state.items = items.map(i => ({ ...DEFAULT_FIELDS, ...i }));
+        render();
+      },
+      (err) => {
+        const code = err && err.code;
+        if (code === 'permission-denied') {
+          toast('Cloud access denied — check Firestore rules', 'error');
+        } else {
+          toast('Cloud sync error: ' + (code || err.message || 'unknown'), 'error');
+        }
+      }
+    );
+    cloudUnsubBeanies = window.firestoreApi.subscribeBeanies(
+      user.uid,
+      (beanies) => { cloudUserBeanies = beanies; }
+    );
+  } else {
+    cloudUid = null;
+    loadState();
+    render();
+  }
+}
+
+function cloudSaveItemSafe(item) {
+  if (!isSignedIn() || !window.firestoreApi) return;
+  window.firestoreApi.saveItem(cloudUid, item).catch(err => {
+    console.error('Cloud save failed:', err);
+    toast('Cloud save failed — change is saved locally', 'error');
+  });
+}
+
+function cloudDeleteItemSafe(itemId) {
+  if (!isSignedIn() || !window.firestoreApi) return;
+  window.firestoreApi.deleteItem(cloudUid, itemId).catch(err => {
+    console.error('Cloud delete failed:', err);
+    toast('Cloud delete failed — try again when online', 'error');
+  });
+}
+
+function cloudSaveBeanieSafe(entry) {
+  if (!isSignedIn() || !window.firestoreApi) return;
+  const key = slug(entry.name);
+  if (!key) return;
+  window.firestoreApi.saveBeanie(cloudUid, key, entry).catch(err => {
+    console.error('Cloud beanie save failed:', err);
+  });
 }
 
 function wireAuthUI() {
@@ -1021,7 +1103,10 @@ function wireAuthUI() {
     }
   };
 
-  window.addEventListener('firebaseAuthChanged', (e) => renderAuthState(e.detail));
+  window.addEventListener('firebaseAuthChanged', (e) => {
+    renderAuthState(e.detail);
+    onCloudAuthChanged(e.detail);
+  });
   window.addEventListener('firebaseAuthError', (e) => {
     console.error('Firebase auth error:', e.detail);
   });
