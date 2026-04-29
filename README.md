@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.4.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.4.1** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,12 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.4.1 — Social-share meta tags, OG image, apple-touch-icon (2026-04-29)
+
+Pasting the live URL into iMessage / Discord / Slack / Twitter / Bluesky now produces a proper link preview instead of a barebones URL. Adds a 1200×630 og-image.png with the bear plush logo and brand on a charcoal/teal panel matching the site, plus a 180×180 apple-touch-icon.png for iOS home-screen pins. Wires the full set of `og:*` and `twitter:*` meta tags (type, url, title, description, image with alt text and dimensions, summary_large_image card), a canonical URL, theme-color matching `--bg-0`, and an apple-touch-icon link.
+
+The OG image is generated from a Python script committed at `.scripts/build-og-image.py` (Pillow + system Inter/Arial Black fonts), mirroring the pattern used in the spacex repo. Re-run the script and bump version on any future brand-affecting change.
 
 ### v0.4.0 — Barcode scanner now works on iOS Safari and Firefox (2026-04-29)
 
