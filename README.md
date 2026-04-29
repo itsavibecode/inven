@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.3.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.4.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -120,15 +120,16 @@ The committed `firebase-config.js` points at itsavibecode's Firebase project. If
 
 ## Which browsers support barcode scanning?
 
-The native `BarcodeDetector` API is supported in:
-- ✅ Chrome (desktop & mobile)
-- ✅ Edge (desktop & mobile)
-- ✅ Samsung Internet
-- ✅ Opera
-- ❌ Safari (not yet — Safari users can still manually type the UPC)
-- ❌ Firefox (behind a flag)
+Barcode scanning works on every modern browser as of v0.4.0:
 
-Everything else works in every modern browser.
+- ✅ Chrome (desktop & mobile) — uses the native `BarcodeDetector` API
+- ✅ Edge (desktop & mobile) — native
+- ✅ Samsung Internet — native
+- ✅ Opera — native
+- ✅ Safari (iOS / macOS) — uses a WASM-backed polyfill, lazy-loaded only when the native API is missing so non-Safari users don't pay the bytes
+- ✅ Firefox — same polyfill path as Safari
+
+Camera access is HTTPS-only (browser policy). GitHub Pages serves over HTTPS, so the live URL works; opening `index.html` from `file://` won't.
 
 ---
 
@@ -149,6 +150,14 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.4.0 — Barcode scanner now works on iOS Safari and Firefox (2026-04-29)
+
+The native `BarcodeDetector` API is Chromium-only — iOS Safari, iOS Chrome (which is also WebKit), and Firefox all lacked it, so the scanner opened on those browsers and immediately bailed with "Try Chrome or Edge on mobile." Now `openScanner` checks for native support, and if it's missing, dynamically imports the WASM-backed `barcode-detector` polyfill (sec-ant/barcode-detector v2) from jsDelivr. The polyfill patches `globalThis.BarcodeDetector` so the existing detection loop keeps using `new BarcodeDetector()` unchanged. The import is a one-shot promise cached for re-opens, never fired on browsers with native support, so non-Safari users don't pay the ~280 KB load.
+
+The scanner UI now shows "Loading scanner for this browser…" while the polyfill resolves, then transitions to the regular "Starting camera…" / "Position the barcode in the frame…" copy. If both native and polyfill fail, the message degrades to "Barcode scanning is not available here" with a hint that manual UPC entry still works.
+
+Updates the README's browser-support section accordingly. Camera access still requires HTTPS — the live GitHub Pages URL covers this; `file://` opens still won't get camera permission.
 
 ### v0.3.0 — Variation flag, per-platform descriptions, eBay item # (2026-04-28)
 

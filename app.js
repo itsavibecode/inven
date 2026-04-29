@@ -5,7 +5,7 @@
              Multi-format import/export
    ============================================================ */
 
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
@@ -578,16 +578,46 @@ async function addPhotoFromUrl(url) {
 }
 
 // ============ BARCODE SCANNER ============
-async function openScanner() {
-  if (!('BarcodeDetector' in window)) {
-    toast('Your browser does not support barcode scanning. Try Chrome or Edge on mobile.', 'error');
-    return;
+
+// Lazy-load the barcode-detector polyfill ONLY if native BarcodeDetector
+// is missing. Avoids paying ~280 KB on Chrome/Edge/Samsung where it's
+// built in. Side-effects entry patches globalThis.BarcodeDetector for us
+// so the rest of this code can keep using `new BarcodeDetector()`.
+let polyfillPromise = null;
+async function ensureBarcodeDetector() {
+  if ('BarcodeDetector' in window) return true;
+  if (!polyfillPromise) {
+    polyfillPromise = import('https://cdn.jsdelivr.net/npm/barcode-detector@2/dist/es/side-effects.min.js')
+      .catch(err => { polyfillPromise = null; throw err; });
   }
+  try {
+    await polyfillPromise;
+    return 'BarcodeDetector' in window;
+  } catch (err) {
+    console.error('Failed to load barcode-detector polyfill:', err);
+    return false;
+  }
+}
+
+async function openScanner() {
   const modal = document.getElementById('scannerModal');
   const video = document.getElementById('scannerVideo');
   const status = document.getElementById('scannerStatus');
 
   modal.classList.add('open');
+
+  if (!('BarcodeDetector' in window)) {
+    status.textContent = 'Loading scanner for this browser…';
+  } else {
+    status.textContent = 'Starting camera…';
+  }
+
+  const supported = await ensureBarcodeDetector();
+  if (!supported) {
+    status.textContent = 'Barcode scanning is not available here.';
+    toast('Scanner could not load. You can still type the UPC manually above.', 'error');
+    return;
+  }
   status.textContent = 'Starting camera…';
 
   try {
