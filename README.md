@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.4.1** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.5.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,14 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.5.0 — Pricing Research tab with margin estimate (2026-04-30)
+
+A new "Research" tab in the item editor for recording what comparable items have actually sold for. Three platform sections side by side — eBay sold avg, Poshmark sold avg, Price Guide — each with a numeric value, a date stamp, and a free-text source/notes field. Anything older than 30 days picks up a small "stale" badge so it's obvious when to re-check.
+
+A live "Suggested listing price" panel below averages whatever you've filled in (just the platforms with a price > 0), and a one-click "Use as listing price" button copies that average into the Listing & Pricing tab's price field. Below that, a margin estimate panel shows the rough net after typical fees: ~80% of asking on Poshmark (20% fee on sales ≥ $15, $2.95 flat below), ~87% on eBay (13% final value fee + small payment-processing flat). If a cost is set, both blocks also show profit-or-loss vs. cost in green or red. Numbers update live as you type.
+
+Auto-fetch from Poshmark and price-guide sites isn't shipping — Poshmark has no public API and most guide sites forbid scraping. The eBay Browse API is legitimately doable but requires OAuth and a CORS proxy worker (same pattern as the stocks-worker), which is queued for a separate v0.5.1 stretch. For now everything is manual entry, and the workflow is good enough to start anchoring real listing decisions on it.
 
 ### v0.4.1 — Social-share meta tags, OG image, apple-touch-icon (2026-04-29)
 

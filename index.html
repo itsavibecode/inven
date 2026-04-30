@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=0.4.1" />
+<link rel="stylesheet" href="styles.css?v=0.5.0" />
 </head>
 <body>
 
@@ -196,6 +196,7 @@
       <button class="tab-btn" data-tab="beanie" id="beanieTab">Beanie Details</button>
       <button class="tab-btn" data-tab="condition">Condition</button>
       <button class="tab-btn" data-tab="listing">Listing &amp; Pricing</button>
+      <button class="tab-btn" data-tab="research">Research</button>
       <button class="tab-btn" data-tab="shipping">Shipping</button>
       <button class="tab-btn" data-tab="photos">Photos &amp; Notes</button>
     </nav>
@@ -558,6 +559,103 @@
         </div>
       </section>
 
+      <!-- TAB: PRICING RESEARCH -->
+      <section class="tab-panel" data-panel="research">
+        <div class="panel-intro">
+          <h3>Pricing Research</h3>
+          <p>Record what comparable items have actually sold for, with the date and source. The suggested price below averages whatever you fill in, and the margin estimate accounts for typical platform fees.</p>
+        </div>
+
+        <div class="research-grid">
+          <div class="research-card">
+            <header class="research-card-header">
+              <h4>eBay sold avg</h4>
+              <span class="research-stale" data-stale-for="ebay" hidden>stale</span>
+            </header>
+            <div class="research-fields">
+              <div class="field">
+                <label>Sold price</label>
+                <input type="number" step="0.01" name="research_ebay_avg" placeholder="0.00" />
+              </div>
+              <div class="field">
+                <label>Date checked</label>
+                <input type="date" name="research_ebay_date" />
+              </div>
+              <div class="field field-span-2">
+                <label>Source / Notes</label>
+                <input type="text" name="research_ebay_notes" placeholder="URL or any notes (e.g. last 5 sold avg)" />
+              </div>
+            </div>
+          </div>
+
+          <div class="research-card">
+            <header class="research-card-header">
+              <h4>Poshmark sold avg</h4>
+              <span class="research-stale" data-stale-for="poshmark" hidden>stale</span>
+            </header>
+            <div class="research-fields">
+              <div class="field">
+                <label>Sold price</label>
+                <input type="number" step="0.01" name="research_poshmark_avg" placeholder="0.00" />
+              </div>
+              <div class="field">
+                <label>Date checked</label>
+                <input type="date" name="research_poshmark_date" />
+              </div>
+              <div class="field field-span-2">
+                <label>Source / Notes</label>
+                <input type="text" name="research_poshmark_notes" placeholder="URL or any notes" />
+              </div>
+            </div>
+          </div>
+
+          <div class="research-card">
+            <header class="research-card-header">
+              <h4>Price guide</h4>
+              <span class="research-stale" data-stale-for="guide" hidden>stale</span>
+            </header>
+            <div class="research-fields">
+              <div class="field">
+                <label>Guide value</label>
+                <input type="number" step="0.01" name="research_guide_avg" placeholder="0.00" />
+              </div>
+              <div class="field">
+                <label>Date checked</label>
+                <input type="date" name="research_guide_date" />
+              </div>
+              <div class="field field-span-2">
+                <label>Source / Notes</label>
+                <input type="text" name="research_guide_notes" placeholder='e.g. "Beanie Babies Price Guide 2024"' />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="suggest-panel" id="researchSummary">
+          <div class="suggest-row">
+            <div class="suggest-block">
+              <div class="suggest-label">Suggested listing price</div>
+              <div class="suggest-value" id="suggestedPrice">—</div>
+              <div class="suggest-sub" id="suggestedSub">Fill in any platform above</div>
+            </div>
+            <button type="button" class="btn btn-ghost" id="useSuggestedPrice" disabled>Use as listing price</button>
+          </div>
+          <div class="margin-row" id="marginRow" hidden>
+            <div class="margin-block">
+              <div class="margin-label">Poshmark net (~80%)</div>
+              <div class="margin-value" id="marginPoshmark">—</div>
+              <div class="margin-sub" id="marginPoshmarkSub">&nbsp;</div>
+            </div>
+            <div class="margin-block">
+              <div class="margin-label">eBay net (~87%)</div>
+              <div class="margin-value" id="marginEbay">—</div>
+              <div class="margin-sub" id="marginEbaySub">&nbsp;</div>
+            </div>
+          </div>
+          <p class="suggest-disclaimer">Net estimates are rough &mdash; Poshmark takes 20% on sales &ge; $15 ($2.95 flat below), eBay takes ~13% plus a small payment-processing fee. Actuals vary by category.</p>
+        </div>
+      </section>
+
       <!-- TAB: SHIPPING -->
       <section class="tab-panel" data-panel="shipping">
         <div class="panel-intro">
@@ -713,15 +811,15 @@
 <div id="toast" class="toast"></div>
 
 <footer class="site-footer">
-  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.4.1</span></p>
+  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.5.0</span></p>
 </footer>
 
 <!-- Cache-bust query string. Bump these (along with the styles.css link
      above) whenever a release ships new JS or CSS, so users on a stale
      browser cache get the new file. The value should match APP_VERSION
      in app.js. -->
-<script type="module" src="firebase-config.js?v=0.4.1"></script>
-<script src="beanie-db.js?v=0.4.1"></script>
-<script src="app.js?v=0.4.1"></script>
+<script type="module" src="firebase-config.js?v=0.5.0"></script>
+<script src="beanie-db.js?v=0.5.0"></script>
+<script src="app.js?v=0.5.0"></script>
 </body>
 </html>

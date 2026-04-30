@@ -5,7 +5,7 @@
              Multi-format import/export
    ============================================================ */
 
-const APP_VERSION = '0.4.1';
+const APP_VERSION = '0.5.0';
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
@@ -35,6 +35,10 @@ const DEFAULT_FIELDS = {
   status: 'Draft', sold_platform: '',
   date_listed: '', date_sold: '',
   url_poshmark: '', url_ebay: '', ebay_item_number: '',
+  // Pricing research (manual entries with date stamps)
+  research_ebay_avg: '', research_ebay_date: '', research_ebay_notes: '',
+  research_poshmark_avg: '', research_poshmark_date: '', research_poshmark_notes: '',
+  research_guide_avg: '', research_guide_date: '', research_guide_notes: '',
   // Shipping
   weight_value: '', weight_unit: 'oz', dim_unit: 'in',
   box_length: '', box_width: '', box_height: '',
@@ -303,6 +307,90 @@ function syncVariationFieldVisibility() {
   field.style.display = toggle.checked ? '' : 'none';
 }
 
+// ============ PRICING RESEARCH ============
+// Estimate net after typical platform fees:
+//   Poshmark — 20% on sales >= $15, flat $2.95 below; we use the 80% rule
+//              for any price (close enough for the suggest panel).
+//   eBay     — ~13% final value fee + tiny payment-processing flat. We
+//              approximate as 87% of asking price.
+const POSHMARK_NET_RATE = 0.80;
+const EBAY_NET_RATE     = 0.87;
+const STALE_DAYS = 30;
+
+function isResearchStale(dateStr) {
+  if (!dateStr) return false;
+  const t = Date.parse(dateStr);
+  if (isNaN(t)) return false;
+  const daysOld = (Date.now() - t) / (1000 * 60 * 60 * 24);
+  return daysOld > STALE_DAYS;
+}
+
+function updateResearchSummary() {
+  const form = document.getElementById('itemForm');
+  if (!form) return;
+
+  const ebayVal = parseFloat(form.elements.research_ebay_avg.value);
+  const poshVal = parseFloat(form.elements.research_poshmark_avg.value);
+  const guideVal = parseFloat(form.elements.research_guide_avg.value);
+
+  const present = [ebayVal, poshVal, guideVal].filter(v => isFinite(v) && v > 0);
+  const valueEl = document.getElementById('suggestedPrice');
+  const subEl   = document.getElementById('suggestedSub');
+  const useBtn  = document.getElementById('useSuggestedPrice');
+  const marginRow = document.getElementById('marginRow');
+
+  if (present.length === 0) {
+    valueEl.textContent = '—';
+    valueEl.classList.add('empty');
+    subEl.textContent = 'Fill in any platform above';
+    useBtn.disabled = true;
+    marginRow.hidden = true;
+  } else {
+    const avg = present.reduce((a, b) => a + b, 0) / present.length;
+    valueEl.textContent = '$' + avg.toFixed(2);
+    valueEl.classList.remove('empty');
+    subEl.textContent = `Average of ${present.length} ${present.length === 1 ? 'source' : 'sources'}`;
+    useBtn.disabled = false;
+    useBtn.dataset.value = avg.toFixed(2);
+
+    // Margin estimate uses the suggested avg as the asking price proxy
+    const cost = parseFloat(form.elements.cost.value) || 0;
+    const poshNet = avg * POSHMARK_NET_RATE;
+    const ebayNet = avg * EBAY_NET_RATE;
+    document.getElementById('marginPoshmark').textContent = '$' + poshNet.toFixed(2);
+    document.getElementById('marginEbay').textContent = '$' + ebayNet.toFixed(2);
+    if (cost > 0) {
+      const poshProfit = poshNet - cost;
+      const ebayProfit = ebayNet - cost;
+      const psub = document.getElementById('marginPoshmarkSub');
+      const esub = document.getElementById('marginEbaySub');
+      psub.textContent = (poshProfit >= 0 ? 'Profit ' : 'Loss ') + '$' + Math.abs(poshProfit).toFixed(2) + ' over $' + cost.toFixed(2) + ' cost';
+      esub.textContent = (ebayProfit >= 0 ? 'Profit ' : 'Loss ') + '$' + Math.abs(ebayProfit).toFixed(2) + ' over $' + cost.toFixed(2) + ' cost';
+      document.getElementById('marginPoshmark').classList.toggle('profit', poshProfit >= 0);
+      document.getElementById('marginPoshmark').classList.toggle('loss', poshProfit < 0);
+      document.getElementById('marginEbay').classList.toggle('profit', ebayProfit >= 0);
+      document.getElementById('marginEbay').classList.toggle('loss', ebayProfit < 0);
+    } else {
+      document.getElementById('marginPoshmarkSub').innerHTML = '&nbsp;';
+      document.getElementById('marginEbaySub').innerHTML = '&nbsp;';
+      document.getElementById('marginPoshmark').classList.remove('profit', 'loss');
+      document.getElementById('marginEbay').classList.remove('profit', 'loss');
+    }
+    marginRow.hidden = false;
+  }
+
+  // Stale badges
+  const platformDates = {
+    ebay: form.elements.research_ebay_date.value,
+    poshmark: form.elements.research_poshmark_date.value,
+    guide: form.elements.research_guide_date.value
+  };
+  Object.entries(platformDates).forEach(([key, date]) => {
+    const badge = document.querySelector(`.research-stale[data-stale-for="${key}"]`);
+    if (badge) badge.hidden = !isResearchStale(date);
+  });
+}
+
 function openEditor(id = null) {
   const modal = document.getElementById('itemModal');
   const form = document.getElementById('itemForm');
@@ -346,6 +434,7 @@ function openEditor(id = null) {
 
   toggleBeanieTab(form.elements.category.value);
   syncVariationFieldVisibility();
+  updateResearchSummary();
   renderPhotoPreview();
   updateTitleCount();
   modal.classList.add('open');
@@ -1336,6 +1425,26 @@ function init() {
 
   const hasVarToggle = document.getElementById('hasVariationsToggle');
   if (hasVarToggle) hasVarToggle.addEventListener('change', syncVariationFieldVisibility);
+
+  // Pricing research: live-update the suggest + margin panel as fields change.
+  // Cost field also matters for margin, so include it.
+  ['research_ebay_avg', 'research_ebay_date',
+   'research_poshmark_avg', 'research_poshmark_date',
+   'research_guide_avg', 'research_guide_date',
+   'cost'].forEach(name => {
+    const el = document.querySelector(`[name="${name}"]`);
+    if (el) el.addEventListener('input', updateResearchSummary);
+  });
+  const useBtn = document.getElementById('useSuggestedPrice');
+  if (useBtn) useBtn.onclick = () => {
+    const v = useBtn.dataset.value;
+    if (!v) return;
+    const priceField = document.querySelector('[name="price"]');
+    if (priceField) {
+      priceField.value = v;
+      toast(`Listing price set to $${v}`, 'success');
+    }
+  };
 
   // UPC lookup
   document.getElementById('upcLookup').onclick = () => {
