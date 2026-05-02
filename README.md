@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.5.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.6.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -17,7 +17,7 @@ Current version: **v0.5.0** — see [Changelog](#changelog) at the bottom for re
 - For vintage items where no UPC exists (most Beanie Babies), this gracefully falls back to manual entry — the UPC is just a reference field.
 
 ### 🐻 Beanie Baby reference database
-- **60+ curated Beanies** baked in with year, birthday, tag poem, style #, retirement date, and collector notes on variations and errors that affect value.
+- **120+ curated Beanies** baked in with year, birthday, style #, retirement date, and collector notes on variations and errors that affect value. Tag poems are filled for the original 60 seed entries; the v0.6.0 expansion leaves poems blank — fill them from your physical heart tag, which is the canonical source for that item anyway.
 - **Auto-suggest as you type** the item name — pick a match and it fills year, birthday, poem, style #, and rarity notes.
 - **"Fill from DB"** button in the Beanie Details tab with richer search.
 - **"Save to DB"** button — turn any item you're cataloguing into a reusable reference entry. Your custom entries appear alongside the seed database and sync via JSON backup.
@@ -150,6 +150,14 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.6.0 — Beanie reference DB expanded from 60 → 124 entries (2026-04-30)
+
+Hand-curated expansion of `beanie-db.js`, adding 66 entries on top of the original 60-entry seed. Coverage now includes the full set of holiday teddies (1998/1999/2000), the value-tier 1995 dinosaur trio (Rex / Steg / Bronty), the 1996 political bears (Lefty / Righty), the Mexican exclusive Osito, the USA-flag Libearty (with the intentional spelling), most popular dogs (Bones / Bruno / Doby / Fetch / Pugsly / Rover / Tracker / Wrinkles), the Iggy/Rainbow material-mix-up pair, the 1995-era Tank/Coral/Sting/Bubbles/Manny early-retirees, and a dozen other commonly-traded Beanies.
+
+Each new entry has accurate name, year, birthday, style #, and retirement date, plus collector notes on value-affecting variations where they exist. Tag poems are intentionally left blank on the new entries — your physical heart tag is the canonical source for that copy, and pre-filling them risks copyright exposure on a public repo.
+
+This was originally scoped as a Beaniepedia scrape but the data on that site is in flowing prose rather than structured tables, URL slugs collide with newer Disney-character Beanies (the Bluey "Bingo" overrides the original 1990s spotted dog), and reproducing their editorial content on a public repo is a legitimate copyright concern. Hand-curated expansion is faster, cleaner, and matches the style of the original seed entries — the long tail of obscure Beanies stays handled by the existing "Save to DB" button.
 
 ### v0.5.0 — Pricing Research tab with margin estimate (2026-04-30)
 

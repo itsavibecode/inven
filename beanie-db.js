@@ -1,16 +1,24 @@
 /* ============================================================
    Beanie Baby Reference Database
-   Curated data for ~60 popular Ty Beanie Babies.
-   Users can add their own entries (stored in localStorage).
+   Curated data for ~125 popular Ty Beanie Babies.
+   Users can add their own entries (stored in localStorage,
+   synced to Firestore when signed in).
 
    Fields per entry:
    - name        : display name
    - year        : year introduced
    - birthday    : date of birth on tag
    - style       : Ty style number
-   - poem        : tag poem
+   - poem        : tag poem (may be blank — fill from physical tag)
    - retired     : retirement date (if known)
    - notes       : collector notes, rarities, errors
+
+   The first ~60 entries (through Claude tie-dye) are the v0.1.0
+   seed set with poems transcribed.   The v0.6.0 expansion below
+   adds another ~65 entries focused on factual data (year, style,
+   retirement, value-affecting variations); poems left blank for
+   the user to fill from their actual physical tag, which is the
+   canonical source anyway.
    ============================================================ */
 
 const BEANIE_DB = [
@@ -522,6 +530,398 @@ const BEANIE_DB = [
     style: "4083",
     poem: "Claude the crab paints by the sea\nA famous artist he hopes to be\nBut the tide came in and his paints fell\nNow his art is on his shell!",
     retired: "1998-12-31"
+  },
+
+  // ============================================================
+  // v0.6.0 expansion — facts-only (poems left blank)
+  // ============================================================
+
+  // Holiday & seasonal bears
+  {
+    name: "1998 Holiday Teddy",
+    year: 1998, birthday: "1998-12-25", style: "4204", poem: "",
+    retired: "1998-12-31",
+    notes: "Holiday-exclusive teddy with green ribbon. Released and retired in the same holiday window."
+  },
+  {
+    name: "1999 Holiday Teddy",
+    year: 1999, birthday: "1999-12-25", style: "4257", poem: "",
+    retired: "1999-12-23",
+    notes: "Holiday-exclusive with red ribbon and snowflake. Released and retired in the same holiday window."
+  },
+  {
+    name: "2000 Holiday Teddy",
+    year: 2000, birthday: "2000-12-14", style: "4332", poem: "",
+    retired: "2001-12-26"
+  },
+  {
+    name: "Valentina the Bear",
+    year: 1998, birthday: "1998-02-14", style: "4233", poem: "",
+    retired: "1999-12-23",
+    notes: "Pink Valentine's bear with red heart on chest. Companion to Valentino."
+  },
+  {
+    name: "Sammy the Bear",
+    year: 1998, birthday: "1998-06-23", style: "4215", poem: "",
+    retired: "1999-12-23",
+    notes: "Tie-dye bear in pinks/yellows. Each one's color pattern is unique."
+  },
+  {
+    name: "Hope the Bear",
+    year: 1998, birthday: "1999-03-23", style: "4213", poem: "",
+    retired: "1999-12-23",
+    notes: "Tan praying bear with paws together."
+  },
+  {
+    name: "Fortune the Panda",
+    year: 1997, birthday: "1997-12-06", style: "4196", poem: "",
+    retired: "1999-08-24"
+  },
+  {
+    name: "Almond the Bear",
+    year: 1999, birthday: "1999-04-14", style: "4246", poem: "",
+    retired: "2000-03-15",
+    notes: "Light tan bear, plain (no tag/ribbon embellishments)."
+  },
+  {
+    name: "Mac the Cardinal",
+    year: 1999, birthday: "1998-06-10", style: "4225", poem: "",
+    retired: "1999-12-23",
+    notes: "Bright red bird, named in homage to Mark McGwire (1998 home-run year)."
+  },
+  {
+    name: "Libearty the Bear",
+    year: 1996, birthday: "1996-07-04", style: "4057", poem: "",
+    retired: "1997-01-01",
+    notes: "USA-flag bear. Tag intentionally misspells 'Liberty' as 'Libearty'. Short shelf life — retired ~6 months after release."
+  },
+  {
+    name: "Osito the Bear",
+    year: 1999, birthday: "1999-02-05", style: "4244", poem: "",
+    retired: "2000-12-15",
+    notes: "Mexican-flag bear, USA exclusive (sold mainly in border-state and Mexican-American markets)."
+  },
+
+  // Dogs
+  {
+    name: "Bones the Dog",
+    year: 1994, birthday: "1994-01-18", style: "4001", poem: "",
+    retired: "1998-05-01",
+    notes: "Tan dog with floppy ears."
+  },
+  {
+    name: "Bruno the Bull Terrier",
+    year: 1997, birthday: "1997-09-09", style: "4183", poem: "",
+    retired: "1999-09-18"
+  },
+  {
+    name: "Doby the Doberman",
+    year: 1996, birthday: "1996-10-09", style: "4110", poem: "",
+    retired: "1998-12-31"
+  },
+  {
+    name: "Fetch the Golden Retriever",
+    year: 1998, birthday: "1997-02-04", style: "4189", poem: "",
+    retired: "1999-12-23"
+  },
+  {
+    name: "Pugsly the Pug",
+    year: 1997, birthday: "1996-05-02", style: "4106", poem: "",
+    retired: "1999-03-31"
+  },
+  {
+    name: "Rover the Dog",
+    year: 1996, birthday: "1996-05-30", style: "4101", poem: "",
+    retired: "1998-05-01",
+    notes: "Bright red dog. Common dog name applied to a not-quite-realistic color."
+  },
+  {
+    name: "Tracker the Basset Hound",
+    year: 1998, birthday: "1997-06-05", style: "4198", poem: "",
+    retired: "2000-09-12"
+  },
+  {
+    name: "Wrinkles the Bulldog",
+    year: 1996, birthday: "1996-05-01", style: "4103", poem: "",
+    retired: "1998-09-22"
+  },
+
+  // Cats
+  {
+    name: "Nip the Cat",
+    year: 1995, birthday: "1994-03-06", style: "4003", poem: "",
+    retired: "1997-12-31",
+    notes: "Gold cat. Three main versions: all-gold (rarest), white-face/belly, and white-paws — all share the style number, value differs significantly."
+  },
+  {
+    name: "Snip the Cat",
+    year: 1997, birthday: "1996-10-22", style: "4120", poem: "",
+    retired: "1998-12-31",
+    notes: "Siamese-coloration cat (cream body, dark face/legs/tail)."
+  },
+  {
+    name: "Pounce the Cat",
+    year: 1998, birthday: "1997-08-28", style: "4122", poem: "",
+    retired: "1999-03-31"
+  },
+  {
+    name: "Prance the Cat",
+    year: 1998, birthday: "1997-11-20", style: "4123", poem: "",
+    retired: "1999-12-23"
+  },
+
+  // Birds
+  {
+    name: "Baldy the Eagle",
+    year: 1997, birthday: "1996-02-17", style: "4074", poem: "",
+    retired: "1998-05-01"
+  },
+  {
+    name: "Caw the Crow",
+    year: 1995, birthday: "", style: "4071", poem: "",
+    retired: "1996-06-15",
+    notes: "Early retirement (~7 months on shelves), harder to find than most 1995 entries."
+  },
+  {
+    name: "Hoot the Owl",
+    year: 1995, birthday: "1995-08-09", style: "4073", poem: "",
+    retired: "1997-10-01"
+  },
+  {
+    name: "Jabber the Parrot",
+    year: 1998, birthday: "1997-10-10", style: "4197", poem: "",
+    retired: "1999-03-31"
+  },
+  {
+    name: "Wise the Owl",
+    year: 1998, birthday: "1997-05-31", style: "4187", poem: "",
+    retired: "1998-12-31",
+    notes: "Class-of-1998 graduation cap. Sold mainly in late 1997 and the 1998 graduation season."
+  },
+  {
+    name: "Stretch the Ostrich",
+    year: 1998, birthday: "1997-09-21", style: "4182", poem: "",
+    retired: "1999-03-31"
+  },
+  {
+    name: "Gracie the Swan",
+    year: 1997, birthday: "1996-06-17", style: "4126", poem: "",
+    retired: "1998-05-01"
+  },
+
+  // Reptiles & amphibians
+  {
+    name: "Hissy the Snake",
+    year: 1998, birthday: "1997-04-04", style: "4185", poem: "",
+    retired: "1999-09-18"
+  },
+  {
+    name: "Iggy the Iguana",
+    year: 1997, birthday: "1997-08-12", style: "4038", poem: "",
+    retired: "1999-03-31",
+    notes: "Multiple production variations (tongue/no-tongue, solid blue / tie-dye) due to a 1997 mix-up with Rainbow's material — consult a collector reference for the version-by-version value spread."
+  },
+  {
+    name: "Rainbow the Chameleon",
+    year: 1997, birthday: "1997-10-14", style: "4037", poem: "",
+    retired: "1999-03-31",
+    notes: "Multiple production variations from the 1997 Iggy/Rainbow material mix-up. Tie-dye is common, solid versions are the value tier."
+  },
+  {
+    name: "Smoochy the Frog",
+    year: 1997, birthday: "1997-10-01", style: "4039", poem: "",
+    retired: "1999-12-23"
+  },
+  {
+    name: "Speedy the Turtle",
+    year: 1994, birthday: "1993-08-14", style: "4030", poem: "",
+    retired: "1997-09-30"
+  },
+
+  // Dinosaur trio (rare, all retired together 1996)
+  {
+    name: "Rex the Tyrannosaurus",
+    year: 1995, birthday: "", style: "4086", poem: "",
+    retired: "1996-06-15",
+    notes: "Tie-dye orange/yellow/red. Part of the 1995 dinosaur trio (Rex / Steg / Bronty) — all retired together in 1996, all highly valuable. Style # was later reused for Righty (1996)."
+  },
+  {
+    name: "Steg the Stegosaurus",
+    year: 1995, birthday: "", style: "4087", poem: "",
+    retired: "1996-06-15",
+    notes: "Tie-dye green/yellow. Part of the discontinued 1995 dinosaur trio."
+  },
+  {
+    name: "Bronty the Brontosaurus",
+    year: 1995, birthday: "", style: "4085", poem: "",
+    retired: "1996-06-15",
+    notes: "Tie-dye blue/teal. Part of the discontinued 1995 dinosaur trio — usually the rarest of the three. Style # was later reused for Lefty (1996)."
+  },
+
+  // Ocean & water
+  {
+    name: "Crunch the Shark",
+    year: 1997, birthday: "1996-01-13", style: "4130", poem: "",
+    retired: "1998-09-24"
+  },
+  {
+    name: "Echo the Dolphin",
+    year: 1996, birthday: "1996-12-21", style: "4180", poem: "",
+    retired: "1998-05-01",
+    notes: "Brief tag-swap with Waves at production — versions exist where Echo's body has Waves' tag and vice versa."
+  },
+  {
+    name: "Bubbles the Fish",
+    year: 1995, birthday: "1995-07-02", style: "4078", poem: "",
+    retired: "1997-05-11",
+    notes: "Black-and-yellow striped angelfish. Early retirement, harder to find."
+  },
+  {
+    name: "Coral the Fish",
+    year: 1995, birthday: "1995-03-02", style: "4079", poem: "",
+    retired: "1997-01-01",
+    notes: "Tie-dye fish. Each one has a unique color pattern."
+  },
+  {
+    name: "Goldie the Goldfish",
+    year: 1994, birthday: "1994-11-14", style: "4023", poem: "",
+    retired: "1997-12-31"
+  },
+  {
+    name: "Sting the Stingray",
+    year: 1995, birthday: "1995-08-27", style: "4077", poem: "",
+    retired: "1997-01-01",
+    notes: "Tie-dye stingray. Each pattern differs."
+  },
+  {
+    name: "Manny the Manatee",
+    year: 1996, birthday: "1996-06-08", style: "4081", poem: "",
+    retired: "1997-05-11",
+    notes: "Pinkish-grey manatee. Early retirement, hard to find."
+  },
+  {
+    name: "Jolly the Walrus",
+    year: 1997, birthday: "1996-12-02", style: "4082", poem: "",
+    retired: "1998-05-01",
+    notes: "Brown walrus with floppy mustache."
+  },
+  {
+    name: "Tusk the Walrus",
+    year: 1995, birthday: "1995-09-18", style: "4076", poem: "",
+    retired: "1997-01-01",
+    notes: "Predecessor to Jolly. Two-tooth walrus. Early tag misspelled the name as 'Tusks'."
+  },
+
+  // Other mammals
+  {
+    name: "Whisper the Deer",
+    year: 1998, birthday: "1997-04-05", style: "4194", poem: "",
+    retired: "1999-08-19"
+  },
+  {
+    name: "Mooch the Spider Monkey",
+    year: 1999, birthday: "1998-08-01", style: "4224", poem: "",
+    retired: "2000-09-12"
+  },
+  {
+    name: "Prickles the Hedgehog",
+    year: 1999, birthday: "1998-02-19", style: "4220", poem: "",
+    retired: "1999-12-23"
+  },
+  {
+    name: "Roam the Buffalo",
+    year: 1998, birthday: "1998-09-27", style: "4209", poem: "",
+    retired: "1999-08-26"
+  },
+  {
+    name: "Roary the Lion",
+    year: 1996, birthday: "1996-02-20", style: "4069", poem: "",
+    retired: "1998-12-31"
+  },
+  {
+    name: "Sly the Fox",
+    year: 1996, birthday: "1996-09-12", style: "4115", poem: "",
+    retired: "1998-09-22",
+    notes: "Originally all-brown belly (rare); later changed to white belly (common)."
+  },
+  {
+    name: "Stinky the Skunk",
+    year: 1995, birthday: "1995-02-13", style: "4017", poem: "",
+    retired: "1998-09-28"
+  },
+  {
+    name: "Tank the Armadillo",
+    year: 1995, birthday: "1995-02-22", style: "4031", poem: "",
+    retired: "1997-10-01",
+    notes: "Three main shell variations: 7-line (oldest, no shell — rarest), 9-line, and 9-line with sewn shell flap. Value differs significantly between them."
+  },
+  {
+    name: "Slowpoke the Sloth",
+    year: 1999, birthday: "1999-05-20", style: "4261", poem: "",
+    retired: "2000-09-12"
+  },
+  {
+    name: "Schweetheart the Orangutan",
+    year: 1999, birthday: "1999-01-23", style: "4252", poem: "",
+    retired: "2000-09-12"
+  },
+
+  // Insects, critters, oddballs
+  {
+    name: "Inch the Inchworm",
+    year: 1995, birthday: "1995-09-03", style: "4044", poem: "",
+    retired: "1998-05-01",
+    notes: "Felt-antenna version is older and rarer. Yarn-antenna version is later and common."
+  },
+  {
+    name: "Glow the Lightning Bug",
+    year: 2000, birthday: "2000-01-04", style: "4283", poem: "",
+    retired: "2001-04-09",
+    notes: "Glow-in-the-dark belly."
+  },
+  {
+    name: "Spinner the Spider",
+    year: 1996, birthday: "1996-10-28", style: "4036", poem: "",
+    retired: "1998-09-19",
+    notes: "Halloween-season spider. Some early tags read 'Creepy' instead of 'Spinner' — extremely rare error."
+  },
+  {
+    name: "Stinger the Scorpion",
+    year: 1998, birthday: "1997-09-29", style: "4193", poem: "",
+    retired: "1999-08-13"
+  },
+
+  // Political — 1996 election cycle (very short shelf life)
+  {
+    name: "Lefty the Donkey",
+    year: 1996, birthday: "1996-07-04", style: "4085", poem: "",
+    retired: "1997-01-01",
+    notes: "Democrat political bear with USA flag on chest. Style # was reused (originally Bronty's). Companion to Righty. Both retired right after the 1996 election — short window, sought after."
+  },
+  {
+    name: "Righty the Elephant",
+    year: 1996, birthday: "1996-07-04", style: "4086", poem: "",
+    retired: "1997-01-01",
+    notes: "Republican political bear with USA flag. Style # was reused (originally Rex's). Companion to Lefty."
+  },
+
+  // Pigs & farm
+  {
+    name: "Knuckles the Pig",
+    year: 1999, birthday: "1999-03-25", style: "4247", poem: "",
+    retired: "2000-04-19"
+  },
+  {
+    name: "Chops the Lamb",
+    year: 1996, birthday: "1996-05-03", style: "4019", poem: "",
+    retired: "1997-01-01",
+    notes: "Black-faced lamb. Replaced by Fleece — short shelf life makes Chops valuable."
+  },
+  {
+    name: "Fleece the Lamb",
+    year: 1997, birthday: "1996-03-21", style: "4125", poem: "",
+    retired: "1998-12-31",
+    notes: "Cream/napped lamb. Successor to Chops."
   }
 ];
 
