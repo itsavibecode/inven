@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.7.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.8.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,25 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.8.0 — Cost / fee tracking and per-item Profit & Loss (2026-05-03)
+
+A whole new dimension to each item: where the money actually goes between the buy and the bank deposit.
+
+**New fields added to each item:**
+- *Listing & Pricing tab:* Item Tax (sales tax paid when buying), Other Expenses (supplies, gas — with a freeform notes box), Poshmark Order Number.
+- *Shipping tab:* the existing Est. Shipping Cost is renamed Postage Charged to Buyer (revenue-side). A new Actual Postage Paid field captures what the shipping label really cost (cost-side).
+- *New Fees & Profit tab:* per-platform fee fields covering eBay Insertion / FVF / FVF on shipping / per-order fixed; Poshmark selling fee; PayPal transaction fee; and an Other fee field with a notes box for promoted listings, authentication fees, etc.
+
+**Auto-fill standard fees button.** Click it after entering a sold price + sold platform and it pre-fills the fee fields with current standard rates: eBay 13.25% FVF + 13.25% on shipping + $0.30 per-order fixed; Poshmark 20% on sales ≥ $15 (or $2.95 flat below). Each value is editable so you can match what your actual seller statement reads.
+
+**Live Profit & Loss summary** at the bottom of the new tab. Shows revenue (sold price + postage charged), minus cost basis (cost + tax + supplies + actual postage paid), minus fees, equals net profit. Color-coded green/red. While an item is unsold the summary projects from the listing price; once sold it reflects actuals. A small "% over cost basis" line gives the margin at a glance.
+
+**Days metrics.** When the item has a Listed date, a Days Active counter shows up. When it sells, the counter pivots to "Days from listed to sold" with a qualitative tag — Quick flip / Normal turnover / Slow mover / Long tail.
+
+**Tooltips everywhere.** Small `?` badges next to each new field — hover to see what the field is for (e.g. on the eBay FVF field: "Typically ~13.25% of the item sale price for most categories. eBay deducts this automatically."). Same for the cost-basis fields, postage fields, every fee field, and Sold Price.
+
+**Demo data updated.** The three already-sold demo items (Patti, Glory, Lefty) now have full cost/fee/postage data filled in, so the P&L panel renders meaningfully out of the box. Patti shows a Poshmark sale, Glory and Lefty show eBay sales with the FVF + per-order breakdown.
 
 ### v0.7.0 — Demo Mode for first-time visitors (2026-04-30)
 

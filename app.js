@@ -5,7 +5,7 @@
              Multi-format import/export
    ============================================================ */
 
-const APP_VERSION = '0.7.0';
+const APP_VERSION = '0.8.0';
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
@@ -32,9 +32,12 @@ const DEFAULT_FIELDS = {
   listing_desc_ebay: '', listing_desc_poshmark: '',
   tags: '',
   cost: '', price: '', min_price: '', sold_price: '',
+  // Additional cost basis
+  item_tax: '', other_expenses: '', other_expenses_notes: '',
   status: 'Draft', sold_platform: '',
   date_listed: '', date_sold: '',
-  url_poshmark: '', url_ebay: '', ebay_item_number: '',
+  url_poshmark: '', url_ebay: '',
+  ebay_item_number: '', poshmark_order_number: '',
   // Pricing research (manual entries with date stamps)
   research_ebay_avg: '', research_ebay_date: '', research_ebay_notes: '',
   research_poshmark_avg: '', research_poshmark_date: '', research_poshmark_notes: '',
@@ -43,8 +46,18 @@ const DEFAULT_FIELDS = {
   weight_value: '', weight_unit: 'oz', dim_unit: 'in',
   box_length: '', box_width: '', box_height: '',
   package_type: 'Padded Mailer / Bubble Mailer',
-  carrier: 'USPS Ground Advantage', ship_cost: '',
+  carrier: 'USPS Ground Advantage',
+  ship_cost: '',     // Postage charged to buyer (kept name for back-compat)
+  postage_paid: '',  // Actual label cost we paid
   ship_notes: '',
+  // Platform fees (filled when sold; Auto-fill button computes standard rates)
+  fee_ebay_insertion: '',
+  fee_ebay_fvf: '',
+  fee_ebay_fvf_shipping: '',
+  fee_ebay_per_order: '',
+  fee_poshmark: '',
+  fee_paypal: '',
+  fee_other: '', fee_other_notes: '',
   // Photos & notes
   photos: [], private_notes: '',
   // Meta
@@ -438,6 +451,7 @@ function openEditor(id = null) {
   toggleBeanieTab(form.elements.category.value);
   syncVariationFieldVisibility();
   updateResearchSummary();
+  updatePnl();
   renderPhotoPreview();
   updateTitleCount();
   modal.classList.add('open');
@@ -1162,6 +1176,201 @@ function parseCSV(text) {
 }
 
 // ============ WIRE UP ============
+// ============ FEES & PROFIT ============
+// Standard fee rates as of 2026 — close enough for Auto-fill defaults.
+// User can override every value to match their actual seller statement.
+const EBAY_FVF_RATE       = 0.1325;   // 13.25%, most categories
+const EBAY_PER_ORDER_FEE  = 0.30;     // flat per-order fixed
+const POSHMARK_HIGH_RATE  = 0.20;     // 20% on sales >= $15
+const POSHMARK_LOW_FLAT   = 2.95;     // flat $2.95 on sales < $15
+const POSHMARK_THRESHOLD  = 15.00;
+
+function num(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+function fmt$(n) {
+  const sign = n < 0 ? '-' : '';
+  return sign + '$' + Math.abs(n).toFixed(2);
+}
+
+function computeStandardFees(soldPlatform, soldPrice, postageCharged) {
+  const fees = {
+    fee_ebay_insertion: '',
+    fee_ebay_fvf: '',
+    fee_ebay_fvf_shipping: '',
+    fee_ebay_per_order: '',
+    fee_poshmark: '',
+    fee_paypal: '',
+  };
+  const sp = num(soldPrice);
+  const sh = num(postageCharged);
+  const isEbay = /ebay/i.test(soldPlatform || '');
+  const isPosh = /posh/i.test(soldPlatform || '');
+  if (isEbay) {
+    fees.fee_ebay_fvf = (sp * EBAY_FVF_RATE).toFixed(2);
+    fees.fee_ebay_fvf_shipping = (sh * EBAY_FVF_RATE).toFixed(2);
+    fees.fee_ebay_per_order = sp > 0 ? EBAY_PER_ORDER_FEE.toFixed(2) : '';
+    fees.fee_ebay_insertion = ''; // usually $0 under free quota
+  }
+  if (isPosh) {
+    if (sp >= POSHMARK_THRESHOLD) fees.fee_poshmark = (sp * POSHMARK_HIGH_RATE).toFixed(2);
+    else if (sp > 0) fees.fee_poshmark = POSHMARK_LOW_FLAT.toFixed(2);
+  }
+  return fees;
+}
+
+function autoFillFees() {
+  const form = document.getElementById('itemForm');
+  const fees = computeStandardFees(
+    form.elements.sold_platform.value,
+    form.elements.sold_price.value,
+    form.elements.ship_cost.value
+  );
+  Object.entries(fees).forEach(([k, v]) => {
+    if (v !== '' && form.elements[k]) form.elements[k].value = v;
+  });
+  updatePnl();
+  toast('Standard fees filled — adjust to match your seller statement', 'success');
+}
+
+function getPnlInputs() {
+  const form = document.getElementById('itemForm');
+  if (!form) return null;
+  const sold = !!form.elements.sold_price.value && num(form.elements.sold_price.value) > 0;
+  // When sold, revenue = sold_price + postage charged. Pre-sale, project from listing price.
+  const revenueItem = sold ? num(form.elements.sold_price.value) : num(form.elements.price.value);
+  const revenuePostage = num(form.elements.ship_cost.value);
+  const cost = num(form.elements.cost.value);
+  const itemTax = num(form.elements.item_tax.value);
+  const otherExpenses = num(form.elements.other_expenses.value);
+  const postagePaid = num(form.elements.postage_paid.value);
+  const fees = {
+    ebay_insertion: num(form.elements.fee_ebay_insertion.value),
+    ebay_fvf:       num(form.elements.fee_ebay_fvf.value),
+    ebay_fvf_ship:  num(form.elements.fee_ebay_fvf_shipping.value),
+    ebay_per_order: num(form.elements.fee_ebay_per_order.value),
+    poshmark:       num(form.elements.fee_poshmark.value),
+    paypal:         num(form.elements.fee_paypal.value),
+    other:          num(form.elements.fee_other.value),
+  };
+  return { sold, revenueItem, revenuePostage, cost, itemTax, otherExpenses, postagePaid, fees };
+}
+
+function updatePnl() {
+  const i = getPnlInputs();
+  if (!i) return;
+  const $ = id => document.getElementById(id);
+
+  const totalRevenue = i.revenueItem + i.revenuePostage;
+  const totalCost = i.cost + i.itemTax + i.otherExpenses + i.postagePaid;
+  const totalFees = Object.values(i.fees).reduce((a, b) => a + b, 0);
+  const net = totalRevenue - totalCost - totalFees;
+
+  // Status line
+  $('pnlStatus').textContent = i.sold
+    ? 'Item is sold — values reflect actuals'
+    : 'Not sold yet — values are projections based on listing price';
+
+  // Revenue
+  if (totalRevenue > 0) {
+    $('pnlRevenue').textContent = fmt$(totalRevenue);
+    const parts = [];
+    if (i.revenueItem > 0) parts.push((i.sold ? 'Sold price ' : 'List price ') + fmt$(i.revenueItem));
+    if (i.revenuePostage > 0) parts.push('+ postage ' + fmt$(i.revenuePostage));
+    $('pnlRevenueDetail').textContent = parts.join('  ');
+  } else {
+    $('pnlRevenue').textContent = '—';
+    $('pnlRevenueDetail').textContent = 'No price set';
+  }
+
+  // Cost basis
+  if (totalCost > 0) {
+    $('pnlCost').textContent = '-' + fmt$(totalCost);
+    const parts = [];
+    if (i.cost > 0) parts.push('Cost ' + fmt$(i.cost));
+    if (i.itemTax > 0) parts.push('+ tax ' + fmt$(i.itemTax));
+    if (i.otherExpenses > 0) parts.push('+ supplies ' + fmt$(i.otherExpenses));
+    if (i.postagePaid > 0) parts.push('+ postage paid ' + fmt$(i.postagePaid));
+    $('pnlCostDetail').textContent = parts.join('  ');
+  } else {
+    $('pnlCost').textContent = '—';
+    $('pnlCostDetail').textContent = 'No costs entered';
+  }
+
+  // Fees
+  if (totalFees > 0) {
+    $('pnlFees').textContent = '-' + fmt$(totalFees);
+    const parts = [];
+    const ebayTotal = i.fees.ebay_insertion + i.fees.ebay_fvf + i.fees.ebay_fvf_ship + i.fees.ebay_per_order;
+    if (ebayTotal > 0) parts.push('eBay ' + fmt$(ebayTotal));
+    if (i.fees.poshmark > 0) parts.push('Poshmark ' + fmt$(i.fees.poshmark));
+    if (i.fees.paypal > 0) parts.push('PayPal ' + fmt$(i.fees.paypal));
+    if (i.fees.other > 0) parts.push('Other ' + fmt$(i.fees.other));
+    $('pnlFeesDetail').textContent = parts.join('  ');
+  } else {
+    $('pnlFees').textContent = '—';
+    $('pnlFeesDetail').textContent = i.sold ? 'No fees entered — try Auto-fill' : 'Fees fill in once sold';
+  }
+
+  // Net
+  const netEl = $('pnlNet');
+  if (totalRevenue === 0 && totalCost === 0) {
+    netEl.textContent = '—';
+    netEl.className = 'pnl-row-amount';
+    $('pnlMarginDetail').textContent = '';
+  } else {
+    netEl.textContent = fmt$(net);
+    netEl.className = 'pnl-row-amount ' + (net >= 0 ? 'pos' : 'neg');
+    if (totalCost > 0) {
+      const margin = (net / totalCost) * 100;
+      $('pnlMarginDetail').textContent = (net >= 0 ? '+' : '') + margin.toFixed(0) + '% over cost basis';
+    } else {
+      $('pnlMarginDetail').textContent = '';
+    }
+  }
+
+  updateDaysPanel();
+}
+
+function daysBetween(aStr, bStr) {
+  const a = Date.parse(aStr); const b = Date.parse(bStr);
+  if (isNaN(a) || isNaN(b)) return null;
+  return Math.round((b - a) / (1000 * 60 * 60 * 24));
+}
+
+function updateDaysPanel() {
+  const form = document.getElementById('itemForm');
+  if (!form) return;
+  const listed = form.elements.date_listed.value;
+  const sold = form.elements.date_sold.value;
+  const panel = document.getElementById('daysPanel');
+  const soldBlock = document.getElementById('daysSoldBlock');
+
+  if (!listed) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const activeDays = sold ? daysBetween(listed, sold) : daysBetween(listed, today);
+  const activeLabel = document.getElementById('daysActiveLabel');
+  activeLabel.textContent = sold ? 'Total days listed' : 'Days active';
+  document.getElementById('daysActiveValue').textContent = activeDays != null ? activeDays + ' days' : '—';
+  document.getElementById('daysActiveSub').textContent = sold
+    ? `Listed ${listed} → sold ${sold}`
+    : `Listed ${listed}`;
+
+  if (sold) {
+    soldBlock.hidden = false;
+    const dts = daysBetween(listed, sold);
+    document.getElementById('daysToSoldValue').textContent = dts != null ? dts + ' days' : '—';
+    document.getElementById('daysToSoldSub').textContent = dts != null
+      ? (dts < 7 ? 'Quick flip' : dts < 30 ? 'Normal turnover' : dts < 90 ? 'Slow mover' : 'Long tail')
+      : '';
+  } else {
+    soldBlock.hidden = true;
+  }
+}
+
 // ============ DEMO MODE ============
 function enterDemoMode() {
   if (isSignedIn()) {
@@ -1497,6 +1706,21 @@ function init() {
       toast(`Listing price set to $${v}`, 'success');
     }
   };
+
+  // P&L panel: live-update when any cost / price / fee / postage / date field changes.
+  ['cost', 'item_tax', 'other_expenses',
+   'price', 'sold_price', 'ship_cost', 'postage_paid',
+   'sold_platform', 'date_listed', 'date_sold',
+   'fee_ebay_insertion', 'fee_ebay_fvf', 'fee_ebay_fvf_shipping', 'fee_ebay_per_order',
+   'fee_poshmark', 'fee_paypal', 'fee_other'].forEach(name => {
+    const el = document.querySelector(`[name="${name}"]`);
+    if (el) el.addEventListener('input', updatePnl);
+    if (el && (el.tagName === 'SELECT' || el.type === 'date')) {
+      el.addEventListener('change', updatePnl);
+    }
+  });
+  const autoFillBtn = document.getElementById('autoFillFeesBtn');
+  if (autoFillBtn) autoFillBtn.onclick = autoFillFees;
 
   // UPC lookup
   document.getElementById('upcLookup').onclick = () => {
