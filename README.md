@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.6.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.7.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,14 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.7.0 — Demo Mode for first-time visitors (2026-04-30)
+
+Adds a "See it with sample data" button to the empty state, and a thin demo banner at the top of the page when active. Loads 12 realistic sample items in memory only — varied categories (Beanies plus a vintage Levi's jacket), varied statuses (Draft / Ready to List / Listed-Both / Listed-eBay / Listed-Poshmark / Sold), varied price tiers (a $18 common Iggy through a $1,200 Royal Blue Peanut), and a few entries with full Pricing Research filled in so the suggested-price + margin panel renders meaningfully.
+
+`saveState()` short-circuits when `state.demoMode` is on, so demo edits / additions / deletions never touch localStorage or Firestore. Sign-in auto-exits demo mode if a visitor decides to convert. There's also a `?demo=1` URL parameter — shareable link straight into the populated demo.
+
+The intent is conversion: a brand-new visitor on the live URL sees a button, clicks it, sees the app full of plausible inventory in one second, and gets the feel of the tool before having to sign in or hand-add anything.
 
 ### v0.6.0 — Beanie reference DB expanded from 60 → 124 entries (2026-04-30)
 

@@ -5,7 +5,7 @@
              Multi-format import/export
    ============================================================ */
 
-const APP_VERSION = '0.6.0';
+const APP_VERSION = '0.7.0';
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
@@ -58,7 +58,8 @@ let state = {
   currentEditId: null,
   currentPhotos: [],
   filter: { search: '', category: '', status: '', sort: 'created_desc' },
-  scanner: { stream: null, detector: null, loop: null }
+  scanner: { stream: null, detector: null, loop: null },
+  demoMode: false
 };
 
 // ============ STORAGE ============
@@ -75,6 +76,8 @@ function loadState() {
 }
 
 function saveState() {
+  // Demo mode is purely in-memory — never persist.
+  if (state.demoMode) return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings));
@@ -1159,6 +1162,45 @@ function parseCSV(text) {
 }
 
 // ============ WIRE UP ============
+// ============ DEMO MODE ============
+function enterDemoMode() {
+  if (isSignedIn()) {
+    toast('Sign out first to try demo mode', 'error');
+    return;
+  }
+  if (typeof DEMO_ITEMS === 'undefined') {
+    console.warn('DEMO_ITEMS not loaded');
+    return;
+  }
+  state.demoMode = true;
+  state.items = DEMO_ITEMS.map(i => ({ ...DEFAULT_FIELDS, ...i }));
+  state.filter = { search: '', category: '', status: '', sort: 'created_desc' };
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterStatus').value = '';
+  const banner = document.getElementById('demoBanner');
+  if (banner) banner.hidden = false;
+  document.body.classList.add('demo-mode');
+  render();
+  toast('Demo mode on — sample data, nothing is saved', 'success');
+}
+
+function exitDemoMode() {
+  state.demoMode = false;
+  const banner = document.getElementById('demoBanner');
+  if (banner) banner.hidden = true;
+  document.body.classList.remove('demo-mode');
+  loadState();
+  render();
+  // Strip ?demo=1 from URL so a refresh doesn't re-enter demo
+  if (location.search.includes('demo=')) {
+    const url = new URL(location.href);
+    url.searchParams.delete('demo');
+    history.replaceState(null, '', url.toString());
+  }
+  toast('Demo mode off', '');
+}
+
 // ============ AUTH UI ============
 function renderAuthState(user) {
   const bar = document.querySelector('.auth-bar');
@@ -1350,6 +1392,7 @@ function wireAuthUI() {
       toast('Sign-in not loaded yet, try again in a moment', 'error');
       return;
     }
+    if (state.demoMode) exitDemoMode();
     signInBtn.disabled = true;
     try {
       await window.firebaseSignIn();
@@ -1393,6 +1436,15 @@ function init() {
   if (verEl) verEl.textContent = 'v' + APP_VERSION;
 
   wireAuthUI();
+
+  // Demo mode buttons + ?demo=1 URL param
+  const tryDemoBtn = document.getElementById('tryDemoBtn');
+  if (tryDemoBtn) tryDemoBtn.onclick = enterDemoMode;
+  const exitDemoBtn = document.getElementById('exitDemoBtn');
+  if (exitDemoBtn) exitDemoBtn.onclick = exitDemoMode;
+  if (new URLSearchParams(location.search).get('demo') === '1') {
+    setTimeout(enterDemoMode, 50);
+  }
 
   document.getElementById('addBtn').onclick = () => openEditor();
   document.getElementById('modalClose').onclick = closeEditor;

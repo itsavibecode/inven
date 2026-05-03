@@ -33,9 +33,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=0.6.0" />
+<link rel="stylesheet" href="styles.css?v=0.7.0" />
 </head>
 <body>
+
+<!-- ============ DEMO BANNER ============ -->
+<div class="demo-banner" id="demoBanner" hidden>
+  <div class="demo-banner-inner">
+    <span class="demo-banner-icon" aria-hidden="true">&#x1F3AC;</span>
+    <span class="demo-banner-text"><strong>Demo mode</strong> &middot; sample data only, nothing is being saved</span>
+    <button type="button" class="btn-link" id="exitDemoBtn">Exit demo</button>
+  </div>
+</div>
 
 <!-- ============ AUTH BAR ============ -->
 <div class="auth-bar">
@@ -173,6 +182,7 @@
     <div class="empty-actions">
       <button class="btn btn-primary" onclick="document.getElementById('addBtn').click()">Add First Item</button>
       <button class="btn btn-ghost" onclick="document.getElementById('importBtn').click()">Import Backup</button>
+      <button class="btn btn-ghost" id="tryDemoBtn">See it with sample data</button>
     </div>
   </div>
 </main>
@@ -811,15 +821,16 @@
 <div id="toast" class="toast"></div>
 
 <footer class="site-footer">
-  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.6.0</span></p>
+  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.7.0</span></p>
 </footer>
 
 <!-- Cache-bust query string. Bump these (along with the styles.css link
      above) whenever a release ships new JS or CSS, so users on a stale
      browser cache get the new file. The value should match APP_VERSION
      in app.js. -->
-<script type="module" src="firebase-config.js?v=0.6.0"></script>
-<script src="beanie-db.js?v=0.6.0"></script>
-<script src="app.js?v=0.6.0"></script>
+<script type="module" src="firebase-config.js?v=0.7.0"></script>
+<script src="beanie-db.js?v=0.7.0"></script>
+<script src="demo-data.js?v=0.7.0"></script>
+<script src="app.js?v=0.7.0"></script>
 </body>
 </html>
