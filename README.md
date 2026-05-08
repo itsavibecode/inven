@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.8.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.8.1** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,20 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.8.1 — PageSpeed perf pass (2026-05-03)
+
+Lighthouse mobile audit on the v0.8.0 live URL came back at 83/100 with FCP at 3.2s and LCP at 3.7s. Diagnostics flagged the Google Fonts stylesheet and the post-firebase scripts as the critical-request chain blocking first paint.
+
+Three fixes:
+
+1. **Font CSS now loads non-blocking** via the `media="print" onload="this.media='all'"` swap pattern, with a `<noscript>` fallback for visitors with JS disabled. Stops the Google Fonts stylesheet from blocking first paint.
+2. **Trimmed font weights** from Geist 300/400/500/600/700 + Mono 400/500/600 down to 400/500/600/700 + Mono 400/500 — only what styles.css actually uses. Smaller font payload, fewer subset fetches.
+3. **Added `defer`** to `beanie-db.js`, `demo-data.js`, and `app.js` so they parse-time async. `firebase-config.js` is `type="module"` (already implicitly deferred).
+
+Skipping the Firebase SDK lazy-import refactor for now — Lighthouse's "unused JavaScript" is mostly the Firestore + Storage modules, which gstatic caches aggressively across sessions and which we genuinely use the moment a returning user signs in. Bigger surgery, smaller real-world payoff. Queued as a stretch if it ever bites in practice.
+
+Adds a small `summarize-lh.py` helper in `.scripts/` for parsing Lighthouse JSON output during future perf passes.
 
 ### v0.8.0 — Cost / fee tracking and per-item Profit & Loss (2026-05-03)
 
