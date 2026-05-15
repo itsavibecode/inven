@@ -1,0 +1,103 @@
+# Mirror static files from this repo into the /inventory subfolder of a
+# second repo (which serves dev.rizzo.cc). Runs on every push to main.
+#
+# Privacy notes (intentional — see project_inven.md memory):
+#   - The target repo is on a separate GitHub account that should NOT
+#     be linkable back to this one in public history. Measures:
+#       1. README.md, .github/, firestore.rules, storage.rules,
+#          .scripts/ excluded from the copy so source-only files don't
+#          leak.
+#       2. Sed rewrites any remaining itsavibecode.github.io/inven refs
+#          in HTML/JS to dev.rizzo.cc/inventory (catches canonical,
+#          og:url, twitter:image, source comments). The og-image text
+#          was scrubbed at the source level (build-og-image.py renders
+#          "dev.rizzo.cc/inventory" in the footer URL line).
+#       3. Commit messages on the target repo are generic
+#          ("Update /inventory") and never reference the source repo
+#          by name.
+#       4. Committer is github-actions[bot], no personal email.
+#
+# Setup (one-time):
+#   1. Create a fine-grained PAT owned by the target account with
+#      Contents: Read and Write on the target repo only.
+#   2. Add it as a repo secret here named MIRROR_TO_DEV_PAT.
+#   3. Either push (triggers automatically) or click "Run workflow" on
+#      the Actions tab to mirror on demand.
+
+name: Mirror /inventory to secondary deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # allow manual trigger from Actions tab
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: yada-yoda/dev
+          token: ${{ secrets.MIRROR_TO_DEV_PAT }}
+          path: dst
+
+      - name: Sync static files into dst/inventory/
+        run: |
+          # Wipe and re-create so deletions in source propagate.
+          rm -rf dst/inventory
+          mkdir -p dst/inventory
+          # Copy everything except dev-only / source-specific files.
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.scripts' \
+            --exclude 'README.md' \
+            --exclude 'firestore.rules' \
+            --exclude 'storage.rules' \
+            src/ dst/inventory/
+
+      - name: Rewrite hardcoded origin refs to dev.rizzo.cc
+        run: |
+          # Defense-in-depth: five passes catching progressively looser
+          # forms of source-side identifiers so descriptive prose in
+          # comments can't leak the cross-account relationship either.
+          # Pass 1: full URL with /inven suffix → dev.rizzo.cc/inventory
+          find dst/inventory -type f \( -name '*.html' -o -name '*.js' -o -name '*.webmanifest' \) -print0 |
+            xargs -0 sed -i 's|https://itsavibecode\.github\.io/inven|https://dev.rizzo.cc/inventory|g'
+          # Pass 2: bare full hostname references
+          find dst/inventory -type f \( -name '*.html' -o -name '*.js' -o -name '*.webmanifest' \) -print0 |
+            xargs -0 sed -i 's|itsavibecode\.github\.io|dev.rizzo.cc|g'
+          # Pass 3: bare-suffix mentions in prose ("the github.io URL...").
+          # Safe because github.io has no legitimate non-hostname usage in
+          # these files — it's always referring to the deployment origin.
+          find dst/inventory -type f \( -name '*.html' -o -name '*.js' -o -name '*.webmanifest' \) -print0 |
+            xargs -0 sed -i 's|github\.io|rizzo.cc|g'
+          # Pass 4: bare account names in prose. Replaces source account
+          # name with "primary" so any leftover ownership comments don't
+          # leak the cross-account link.
+          find dst/inventory -type f \( -name '*.html' -o -name '*.js' -o -name '*.webmanifest' \) -print0 |
+            xargs -0 sed -i 's|itsavibecode|primary|g'
+          # Pass 5: scrub the target account name too — prose like
+          # "yada-yoda/dev" → "secondary/dev" still reads cleanly.
+          find dst/inventory -type f \( -name '*.html' -o -name '*.js' -o -name '*.webmanifest' \) -print0 |
+            xargs -0 sed -i 's|yada-yoda|secondary|g'
+
+      - name: Commit and push if changed
+        working-directory: dst
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add inventory/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          # Intentionally generic — no source-repo name, no app version.
+          git commit -m "Update /inventory"
+          git push

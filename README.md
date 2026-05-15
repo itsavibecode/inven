@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.8.2** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.9.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,18 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.9.0 — PWA install + dev.rizzo.cc/inventory mirror (2026-05-08)
+
+Two structural changes that don't add features but change where and how the app lives.
+
+**Progressive Web App install.** Adds a `site.webmanifest` with name, theme color matching `--bg-0`, standalone display mode, and three new icons rendered by `.scripts/build-og-image.py`: a 192×192 standard icon, a 512×512 standard icon, and a 512×512 maskable icon with safe-zone padding so Android's adaptive crop doesn't clip the bear. With manifest + HTTPS + apple-touch-icon all in place, Chrome will show an install prompt and iOS / Android will install with the bear logo on the home screen.
+
+**Secondary deployment at dev.rizzo.cc/inventory.** A new `.github/workflows/mirror-to-dev.yml` workflow runs on every push to main: it checks out this repo and the target `yada-yoda/dev` repo, rsyncs the static files into `dst/inventory/` (excluding `.git`, `.github`, `README.md`, `firestore.rules`, `storage.rules`, `.scripts/`), then runs five sed passes to rewrite any identity references — full-URL, bare hostname, `github.io` → `rizzo.cc`, plus account-name scrubs that swap `itsavibecode` → `primary` and `yada-yoda` → `secondary` so descriptive prose in source comments can't leak the cross-account relationship either. Commits go to the target repo as `github-actions[bot]` with a generic "Update /inventory" message.
+
+**Canonical URL is now `dev.rizzo.cc/inventory/`.** The `<link rel="canonical">`, every `og:*`, and every `twitter:*` URL/image meta tag points there. The og-image footer URL line was changed at the source-rendering level to read `dev.rizzo.cc/inventory`. The original `itsavibecode.github.io/inven/` URL still serves the same content as a secondary host — same Firebase project, same data — but search engines and social shares will route to the dev.rizzo.cc domain.
+
+Requires `MIRROR_TO_DEV_PAT` repo secret (already configured) and `dev.rizzo.cc` added to Firebase Auth's authorized domains (already done) so sign-in popups work from the mirror.
 
 ### v0.8.2 — Firebase lazy-init perf pass (2026-05-08)
 

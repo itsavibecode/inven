@@ -1,9 +1,12 @@
 """
-Build The Ledger Open Graph image.
+Build The Ledger brand assets.
 
-Output:
-  T:/ClaudeCodeRepo/inven/og-image.png        (1200x630, share-target standard)
-  T:/ClaudeCodeRepo/inven/apple-touch-icon.png (180x180, iOS home-screen)
+Outputs (all in repo root):
+  og-image.png             1200x630   social share card
+  apple-touch-icon.png      180x180   iOS home-screen icon
+  icon-192.png              192x192   PWA standard icon
+  icon-512.png              512x512   PWA large icon
+  icon-512-maskable.png     512x512   PWA maskable (with safe-zone padding)
 
 Run from T:\\ClaudeCodeRepo\\inven with:
     python .scripts/build-og-image.py
@@ -15,6 +18,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 OUT_OG = REPO / "og-image.png"
 OUT_APPLE = REPO / "apple-touch-icon.png"
+OUT_PWA_192 = REPO / "icon-192.png"
+OUT_PWA_512 = REPO / "icon-512.png"
+OUT_PWA_MASK = REPO / "icon-512-maskable.png"
 
 # Palette — mirrors styles.css (--bg-0, --accent, etc.)
 BG       = (10, 13, 17)        # #0a0d11
@@ -140,7 +146,7 @@ for feature in features:
     pill_x += pw + 12
 
 url_font = f("Inter-Medium.ttf", 18)
-url_text = "itsavibecode.github.io/inven"
+url_text = "dev.rizzo.cc/inventory"
 uw, uh = text_size(d, url_text, url_font)
 d.text((W - PAD - 36 - uw, H - PAD - 18 - uh),
        url_text, font=url_font, fill=INK_FAINT)
@@ -149,13 +155,36 @@ img.save(OUT_OG, "PNG", optimize=True)
 print(f"Wrote {OUT_OG}  ({OUT_OG.stat().st_size // 1024} KB)")
 
 # ----------------------------------------------------------------------------
-# Apple touch icon — 180 x 180
+# Icon renderer — used for apple-touch + the two PWA icons
 # ----------------------------------------------------------------------------
-S = 180
-icon = Image.new("RGB", (S, S), BG)
-di = ImageDraw.Draw(icon)
-di.rounded_rectangle([0, 0, S - 1, S - 1], radius=34, fill=BG)
-draw_plush_bear(di, S / 2, S / 2 + 8, 145)
+def render_icon(out_path, size, bear_scale_ratio, corner_ratio, bear_y_offset_ratio=0.04):
+    """Render a square icon: rounded-square BG with the plush bear centered.
+    bear_scale_ratio: how much of the canvas the bear takes (0..1).
+    corner_ratio: corner radius as fraction of size.
+    """
+    icon = Image.new("RGB", (size, size), BG)
+    di = ImageDraw.Draw(icon)
+    di.rounded_rectangle([0, 0, size - 1, size - 1],
+                         radius=int(size * corner_ratio), fill=BG)
+    draw_plush_bear(
+        di,
+        size / 2,
+        size / 2 + size * bear_y_offset_ratio,
+        size * bear_scale_ratio,
+    )
+    icon.save(out_path, "PNG", optimize=True)
+    print(f"Wrote {out_path}  ({out_path.stat().st_size // 1024} KB)")
 
-icon.save(OUT_APPLE, "PNG", optimize=True)
-print(f"Wrote {OUT_APPLE}  ({OUT_APPLE.stat().st_size // 1024} KB)")
+# Apple touch icon (rounded, bear fills most)
+render_icon(OUT_APPLE, 180, bear_scale_ratio=0.80, corner_ratio=0.19)
+
+# PWA 192 — same proportions as Apple touch, just a different size
+render_icon(OUT_PWA_192, 192, bear_scale_ratio=0.80, corner_ratio=0.19)
+
+# PWA 512 — same proportions
+render_icon(OUT_PWA_512, 512, bear_scale_ratio=0.80, corner_ratio=0.19)
+
+# PWA 512 maskable — Android adaptive icons crop to a circle/squircle within
+# the inner 80% of the canvas (safe zone). Shrink the bear so it survives the
+# crop. No rounded corners since the platform applies its own mask.
+render_icon(OUT_PWA_MASK, 512, bear_scale_ratio=0.56, corner_ratio=0.0)

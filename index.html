@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Ledger — Collectibles Inventory</title>
 <meta name="description" content="The Ledger is a self-hosted inventory manager for Beanie Babies and resale collectibles. Listing-ready capture for Poshmark and eBay, multi-device sync, full import/export.">
-<link rel="canonical" href="https://itsavibecode.github.io/inven/" />
+<link rel="canonical" href="https://dev.rizzo.cc/inventory/" />
 <meta name="theme-color" content="#0a0d11" />
 
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://itsavibecode.github.io/inven/" />
+<meta property="og:url" content="https://dev.rizzo.cc/inventory/" />
 <meta property="og:title" content="The Ledger — Collectibles Inventory" />
 <meta property="og:description" content="Self-hosted inventory for Beanie Babies and resale collectibles. Listing-ready for Poshmark and eBay, multi-device sync, photo backup." />
-<meta property="og:image" content="https://itsavibecode.github.io/inven/og-image.png" />
+<meta property="og:image" content="https://dev.rizzo.cc/inventory/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="The Ledger — collectibles inventory tool, dark mode with teal plush-bear logo" />
@@ -23,12 +23,13 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="The Ledger — Collectibles Inventory" />
 <meta name="twitter:description" content="Self-hosted inventory for Beanie Babies and resale collectibles. Listing-ready for Poshmark and eBay, multi-device sync, photo backup." />
-<meta name="twitter:image" content="https://itsavibecode.github.io/inven/og-image.png" />
+<meta name="twitter:image" content="https://dev.rizzo.cc/inventory/og-image.png" />
 <meta name="twitter:image:alt" content="The Ledger — collectibles inventory tool, dark mode with teal plush-bear logo" />
 
 <!-- Icons -->
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="manifest" href="site.webmanifest" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +39,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"></noscript>
-<link rel="stylesheet" href="styles.css?v=0.8.2" />
+<link rel="stylesheet" href="styles.css?v=0.9.0" />
 </head>
 <body>
 
@@ -962,16 +963,16 @@
 <div id="toast" class="toast"></div>
 
 <footer class="site-footer">
-  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.8.2</span></p>
+  <p>The Ledger · Client-side inventory · Optional Google sign-in for sync · Export often · <span id="appVersion">v0.9.0</span></p>
 </footer>
 
 <!-- Cache-bust query string. Bump these (along with the styles.css link
      above) whenever a release ships new JS or CSS, so users on a stale
      browser cache get the new file. The value should match APP_VERSION
      in app.js. -->
-<script type="module" src="firebase-config.js?v=0.8.2"></script>
-<script defer src="beanie-db.js?v=0.8.2"></script>
-<script defer src="demo-data.js?v=0.8.2"></script>
-<script defer src="app.js?v=0.8.2"></script>
+<script type="module" src="firebase-config.js?v=0.9.0"></script>
+<script defer src="beanie-db.js?v=0.9.0"></script>
+<script defer src="demo-data.js?v=0.9.0"></script>
+<script defer src="app.js?v=0.9.0"></script>
 </body>
 </html>
