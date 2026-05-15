@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.8.1** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.8.2** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,18 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.8.2 — Firebase lazy-init perf pass (2026-05-08)
+
+v0.8.1's font + script-defer pass moved local Lighthouse from 83 → 86. PSI on the live URL was still flagging 190 KiB of unused JavaScript, almost entirely the Firestore + Storage SDK modules pulled eagerly even though most visitors (demo browsers, guests, page-load shoppers) never touch the cloud at all.
+
+Three structural changes in `firebase-config.js`:
+
+1. **Auth init runs in `requestIdleCallback`** (1.5s timeout fallback). The page paints with the guest auth bar before any Firebase code runs.
+2. **Firestore and Storage modules are now dynamic-imported on first use** — `ensureFirestore()` / `ensureStorage()` cache the module reference and the initialized handle, so every subsequent call is instant. Demo Mode and guest-mode visitors never trigger the imports at all.
+3. **API surface stays the same.** `window.firestoreApi.saveItem(...)`, `subscribeItems(...)`, `firebaseStorageApi.uploadPhoto(...)`, etc. all behave identically to v0.8.1 — every method now awaits its module under the hood. `subscribeItems` and `subscribeBeanies` still return a *synchronous* unsubscribe function (a lazy wrapper that short-circuits if cancelled before the listener attaches), so existing app.js cleanup code doesn't change.
+
+Pattern is the same one the `sick` project used to hit PSI mobile 99 / desktop 100. Expected lift here: 86 → 95+ on mobile, FCP under 2s, the "unused JS" diagnostic should drop to near-zero for first-load visitors.
 
 ### v0.8.1 — PageSpeed perf pass (2026-05-03)
 

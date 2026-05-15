@@ -1,9 +1,16 @@
 // ============================================================
-// Firebase configuration + auth bridge
+// Firebase configuration + auth/data bridge
 // Modular SDK (v12). Loaded as <script type="module">.
-// Exposes a small surface on window for the non-module app.js
-// to call into without needing the whole codebase to become
-// modules.
+//
+// Loading strategy (v0.8.2):
+//   * Auth module loaded eagerly so onAuthStateChanged can fire
+//     for returning-signed-in users on page load.
+//   * App init + auth state subscription wrapped in
+//     requestIdleCallback so they yield to first paint.
+//   * Firestore + Storage modules are dynamic-imported lazily —
+//     only fetched on the first call into firestoreApi /
+//     firebaseStorageApi. Cuts ~190 KiB of unused JS off the
+//     critical path for the demo / guest flow.
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -14,25 +21,6 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadString,
-  getDownloadURL,
-  deleteObject,
-  listAll
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzKrob4KDq_BNe-cz7-9pI2Zib7yvTvKs",
@@ -43,15 +31,50 @@ const firebaseConfig = {
   appId: "1:592655196273:web:8042049aab5917b7f9fbd0"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const googleProvider = new GoogleAuthProvider();
+let app = null;
+let auth = null;
+let googleProvider = null;
+let _firebaseReadyPromise = null;
+let _firestoreMod = null, _db = null;
+let _storageMod = null, _storage = null;
 
-window.firebaseAuth = auth;
-window.firebaseDb = db;
-window.firebaseStorage = storage;
+function ensureAuth() {
+  if (_firebaseReadyPromise) return _firebaseReadyPromise;
+  _firebaseReadyPromise = new Promise(resolve => {
+    const start = () => {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      googleProvider = new GoogleAuthProvider();
+      window.firebaseAuth = auth;
+      onAuthStateChanged(auth, (user) => {
+        window.dispatchEvent(new CustomEvent('firebaseAuthChanged', { detail: user }));
+      });
+      resolve();
+    };
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(start, { timeout: 1500 });
+    } else {
+      setTimeout(start, 0);
+    }
+  });
+  return _firebaseReadyPromise;
+}
+
+async function ensureFirestore() {
+  if (_db) return { db: _db, m: _firestoreMod };
+  await ensureAuth();
+  _firestoreMod = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js");
+  _db = _firestoreMod.getFirestore(app);
+  return { db: _db, m: _firestoreMod };
+}
+
+async function ensureStorage() {
+  if (_storage) return { storage: _storage, m: _storageMod };
+  await ensureAuth();
+  _storageMod = await import("https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js");
+  _storage = _storageMod.getStorage(app);
+  return { storage: _storage, m: _storageMod };
+}
 
 // Photos in items are either base64 data URLs (newly added, awaiting
 // upload) or https download URLs (already uploaded to Cloud Storage).
@@ -64,75 +87,12 @@ function stripForCloud(item) {
   return { ...item, photos };
 }
 
-window.firestoreApi = {
-  saveItem: (uid, item) => setDoc(
-    doc(db, 'users', uid, 'items', item.id),
-    stripForCloud(item)
-  ),
-  deleteItem: (uid, itemId) => deleteDoc(doc(db, 'users', uid, 'items', itemId)),
-  saveBeanie: (uid, key, entry) => setDoc(doc(db, 'users', uid, 'beanieDb', key), entry),
-  deleteBeanie: (uid, key) => deleteDoc(doc(db, 'users', uid, 'beanieDb', key)),
-  fetchAllItems: async (uid) => {
-    const snap = await getDocs(collection(db, 'users', uid, 'items'));
-    return snap.docs.map(d => d.data());
-  },
-  subscribeItems: (uid, cb, errCb) => onSnapshot(
-    query(collection(db, 'users', uid, 'items'), orderBy('created_at', 'desc')),
-    (snap) => cb(snap.docs.map(d => d.data())),
-    (err) => { if (errCb) errCb(err); else console.error('items snapshot error:', err); }
-  ),
-  subscribeBeanies: (uid, cb, errCb) => onSnapshot(
-    collection(db, 'users', uid, 'beanieDb'),
-    (snap) => cb(snap.docs.map(d => d.data())),
-    (err) => { if (errCb) errCb(err); else console.error('beanies snapshot error:', err); }
-  )
-};
-
 // ============================================================
-// Storage bridge — photos
+// Auth surface
 // ============================================================
-
-window.firebaseStorageApi = {
-  // Upload a single base64 data URL, return the public download URL.
-  uploadPhoto: async (uid, itemId, dataUrl) => {
-    const photoId = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
-    const path = `users/${uid}/items/${itemId}/${photoId}`;
-    const ref = storageRef(storage, path);
-    const snapshot = await uploadString(ref, dataUrl, 'data_url');
-    const url = await getDownloadURL(snapshot.ref);
-    return url;
-  },
-
-  // Delete every photo under an item's folder. Best-effort: errors are
-  // logged, not thrown, so a partial cleanup still removes most of them.
-  deleteItemPhotos: async (uid, itemId) => {
-    const folderRef = storageRef(storage, `users/${uid}/items/${itemId}`);
-    try {
-      const list = await listAll(folderRef);
-      await Promise.all(list.items.map(item =>
-        deleteObject(item).catch(err => console.warn('delete photo failed:', err))
-      ));
-    } catch (err) {
-      console.warn('listAll for item photos failed:', err);
-    }
-  },
-
-  // Delete a single photo by its full https download URL.
-  deletePhotoByUrl: async (url) => {
-    try {
-      // Storage download URLs encode the path between /o/ and ?
-      const m = url.match(/\/o\/([^?]+)/);
-      if (!m) return;
-      const path = decodeURIComponent(m[1]);
-      const ref = storageRef(storage, path);
-      await deleteObject(ref);
-    } catch (err) {
-      console.warn('deletePhotoByUrl failed:', err);
-    }
-  }
-};
 
 window.firebaseSignIn = async function() {
+  await ensureAuth();
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
@@ -146,6 +106,7 @@ window.firebaseSignIn = async function() {
 };
 
 window.firebaseSignOut = async function() {
+  await ensureAuth();
   try {
     await signOut(auth);
   } catch (err) {
@@ -154,8 +115,109 @@ window.firebaseSignOut = async function() {
   }
 };
 
-onAuthStateChanged(auth, (user) => {
-  window.dispatchEvent(new CustomEvent('firebaseAuthChanged', { detail: user }));
-});
+// ============================================================
+// Firestore API — calls lazy-load the firestore module on first use
+// ============================================================
 
+window.firestoreApi = {
+  saveItem: async (uid, item) => {
+    const { db, m } = await ensureFirestore();
+    return m.setDoc(m.doc(db, 'users', uid, 'items', item.id), stripForCloud(item));
+  },
+  deleteItem: async (uid, itemId) => {
+    const { db, m } = await ensureFirestore();
+    return m.deleteDoc(m.doc(db, 'users', uid, 'items', itemId));
+  },
+  saveBeanie: async (uid, key, entry) => {
+    const { db, m } = await ensureFirestore();
+    return m.setDoc(m.doc(db, 'users', uid, 'beanieDb', key), entry);
+  },
+  deleteBeanie: async (uid, key) => {
+    const { db, m } = await ensureFirestore();
+    return m.deleteDoc(m.doc(db, 'users', uid, 'beanieDb', key));
+  },
+  fetchAllItems: async (uid) => {
+    const { db, m } = await ensureFirestore();
+    const snap = await m.getDocs(m.collection(db, 'users', uid, 'items'));
+    return snap.docs.map(d => d.data());
+  },
+  // subscribeItems / subscribeBeanies return a sync unsubscribe function
+  // (matching the previous Firestore-native signature), but the actual
+  // listener is attached asynchronously after the firestore module loads.
+  // Cancelling before attach short-circuits cleanly.
+  subscribeItems: (uid, cb, errCb) => {
+    let realUnsub = null;
+    let cancelled = false;
+    ensureFirestore().then(({ db, m }) => {
+      if (cancelled) return;
+      realUnsub = m.onSnapshot(
+        m.query(m.collection(db, 'users', uid, 'items'), m.orderBy('created_at', 'desc')),
+        (snap) => cb(snap.docs.map(d => d.data())),
+        (err) => { if (errCb) errCb(err); else console.error('items snapshot error:', err); }
+      );
+    }).catch(err => { if (errCb) errCb(err); });
+    return () => {
+      cancelled = true;
+      if (realUnsub) realUnsub();
+    };
+  },
+  subscribeBeanies: (uid, cb, errCb) => {
+    let realUnsub = null;
+    let cancelled = false;
+    ensureFirestore().then(({ db, m }) => {
+      if (cancelled) return;
+      realUnsub = m.onSnapshot(
+        m.collection(db, 'users', uid, 'beanieDb'),
+        (snap) => cb(snap.docs.map(d => d.data())),
+        (err) => { if (errCb) errCb(err); else console.error('beanies snapshot error:', err); }
+      );
+    }).catch(err => { if (errCb) errCb(err); });
+    return () => {
+      cancelled = true;
+      if (realUnsub) realUnsub();
+    };
+  }
+};
+
+// ============================================================
+// Storage API — same lazy pattern
+// ============================================================
+
+window.firebaseStorageApi = {
+  uploadPhoto: async (uid, itemId, dataUrl) => {
+    const { storage, m } = await ensureStorage();
+    const photoId = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    const path = `users/${uid}/items/${itemId}/${photoId}`;
+    const r = m.ref(storage, path);
+    const snap = await m.uploadString(r, dataUrl, 'data_url');
+    return m.getDownloadURL(snap.ref);
+  },
+  deleteItemPhotos: async (uid, itemId) => {
+    const { storage, m } = await ensureStorage();
+    const folderRef = m.ref(storage, `users/${uid}/items/${itemId}`);
+    try {
+      const list = await m.listAll(folderRef);
+      await Promise.all(list.items.map(item =>
+        m.deleteObject(item).catch(err => console.warn('delete photo failed:', err))
+      ));
+    } catch (err) {
+      console.warn('listAll for item photos failed:', err);
+    }
+  },
+  deletePhotoByUrl: async (url) => {
+    try {
+      const match = url.match(/\/o\/([^?]+)/);
+      if (!match) return;
+      const path = decodeURIComponent(match[1]);
+      const { storage, m } = await ensureStorage();
+      await m.deleteObject(m.ref(storage, path));
+    } catch (err) {
+      console.warn('deletePhotoByUrl failed:', err);
+    }
+  }
+};
+
+// Kick off auth init via requestIdleCallback right away — but the page
+// keeps rendering while this fires.
+ensureAuth();
 window.dispatchEvent(new CustomEvent('firebaseReady'));

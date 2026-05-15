@@ -5,7 +5,7 @@
              Multi-format import/export
    ============================================================ */
 
-const APP_VERSION = '0.8.1';
+const APP_VERSION = '0.8.2';
 
 const STORAGE_KEY = 'theLedger.inventory.v1';
 const SETTINGS_KEY = 'theLedger.settings.v1';
