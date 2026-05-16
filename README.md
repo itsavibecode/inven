@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.9.3** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.9.4** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,14 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.9.4 — Interactive stat cards + per-animal demo silhouettes (2026-05-16)
+
+**Stat cards are now clickable filters.** Clicking the **Items / Active / Sold** cards in the header filters the grid to that subset. The active card gets a teal background, accent-colored text, and a glowing bottom border. Clicking the same card again clears the filter and goes back to all items. Est. Value stays display-only (it's a summary number, not a meaningful filter pivot). Renders as native `<button>` elements with keyboard focus support — tab through the cards and press enter to filter.
+
+Active = `Ready to List / Listed-Poshmark / Listed-eBay / Listed-Both` (matches the existing stat-count formula; drafts don't count as "active" since they're not listed yet). Sold = `Sold / Shipped`.
+
+**Per-animal silhouettes in demo photos.** demo-data.js now has a small `_ICONS` library with distinct SVG silhouettes for **bear, elephant, dinosaur, spider, lizard, donkey, shirt**. Demo items pick the matching kind: Peanut Royal Blue gets the elephant, Rex gets the T-Rex profile, Iggy gets the iguana, Spinner gets the eight-legged spider, Lefty gets the donkey (long ears), and the Levi's jacket gets the shirt. The rest fall back to the bear silhouette. Still ~700 B per photo as inline data URLs, just visually distinct now.
 
 ### v0.9.3 — Version in window title (2026-05-16)
 
