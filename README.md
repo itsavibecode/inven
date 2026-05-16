@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.9.5** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.9.6** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,10 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.9.6 — Hide footer "Try the demo" while already in demo (2026-05-16)
+
+The footer "Try the demo" link is now hidden (along with its leading dot separator) when `body.demo-mode` is active — clicking it from within demo would be a no-op anyway. Implemented as a CSS rule, so it toggles instantly when `enterDemoMode`/`exitDemoMode` adds or removes the body class. Link still appears for guests in the empty state and for signed-in users who want to revisit the demo.
 
 ### v0.9.5 — AI-generated demo product photos + always-on auto-demo (2026-05-16)
 
