@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.9.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.9.1** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,12 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.9.1 — Footer "Try the demo" link (2026-05-15)
+
+Adds a teal "Try the demo" link to the site footer between "Export often" and the version chip. Real `<a href="?demo=1">` so right-click → copy link gives a shareable demo URL; left-click intercepts and triggers demo mode in place (no page reload, history.replaceState updates the URL). Honors modifier keys for open-in-new-tab. Signed-in users still see the existing toast guard if they click.
+
+Previously the only entry point was the "See it with sample data" button on the empty state — power users with real data never saw it.
 
 ### v0.9.0 — PWA install + dev.rizzo.cc/inventory mirror (2026-05-08)
 
