@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.9.4** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.9.5** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,14 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.9.5 — AI-generated demo product photos + always-on auto-demo (2026-05-16)
+
+**Real photos for every demo item.** The v0.9.4 SVG silhouettes were placeholders — v0.9.5 replaces them with 12 AI-generated product-photo JPEGs in `demo-photos/`, one per demo item. Princess is a purple plush teddy bear with a white rose; Peanut Royal Blue is a recognizable blue elephant plush; Rex is an orange tie-dye T-Rex; the Levi's jacket is a medium-wash denim trucker shot lay-flat. Each ~20-30 KB, served direct from the repo — no runtime dependency on the image-gen service.
+
+Generation script committed at `.scripts/build-demo-photos.py` — uses Pollinations.ai (free, no-auth) with fixed seeds per item so the photos are reproducible. Re-run any time you want to refresh or tweak prompts.
+
+**Auto-demo now loads on every visit, not just the first.** Previous logic set a flag on the first auto-demo and never showed it again. That meant visitors with cleared inventory still saw an empty state on repeat visits. New rule: auto-demo every load when there's no inventory data and no user — *unless* the visitor explicitly clicked "Exit demo" once. The new `theLedger.demoDismissed.v1` flag tracks only that deliberate dismissal; sign-in-driven exits (e.g. Firebase session restoring) don't write the flag, so signing out later restores auto-demo eligibility.
 
 ### v0.9.4 — Interactive stat cards + per-animal demo silhouettes (2026-05-16)
 
