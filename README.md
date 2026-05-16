@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.9.1** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.9.2** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,16 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.9.2 — Auto-demo on first visit + per-item photos (2026-05-16)
+
+Two demo-mode upgrades that fix the conversion gap: first-time visitors with no localStorage data now drop straight into the populated demo instead of an empty state, and every demo item now carries a procedurally-generated SVG "photo" so the photo feature is visible from the moment the page paints.
+
+**Auto-demo on true first visit.** On page load, if both `theLedger.inventory.v1` and `theLedger.demoShown.v1` are absent from localStorage and no `?demo=0` opt-out is in the URL, demo mode auto-enters and the `demoShown` flag is set so future visits don't re-trigger it. Returning users — even those who exited demo and never added an item — never see auto-demo again. Footer "Try the demo" link and `?demo=1` URL param still work for manual entry without touching the flag.
+
+**Auto-exit demo on session restore.** If Firebase Auth restores a session for a returning signed-in user after auto-demo has already fired, `onCloudAuthChanged` now silently exits demo mode (drops the banner, clears the body class, strips `?demo=` from the URL) *before* subscribing to Firestore, so the visitor doesn't see demo content flash over their real inventory.
+
+**Per-item SVG photos.** demo-data.js now defines a `_demoPhoto(label, hue, kind)` helper that produces a procedural gradient card (~700 B encoded) with a bear or shirt silhouette + the item name overlaid. Each of the 12 demo items references it with a hue that maps to the item's color family (purple Princess, royal-blue Peanut, magenta Patti, holiday-red Teddy, denim-blue Levi's jacket as a shirt icon, etc.). Inline data URLs — no extra fetches, no copyright concerns, no localStorage bloat since demo data is in-memory only.
 
 ### v0.9.1 — Footer "Try the demo" link (2026-05-15)
 
