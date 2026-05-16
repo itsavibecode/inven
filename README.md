@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.9.2** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.9.3** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,10 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.9.3 — Version in window title (2026-05-16)
+
+The `<title>` tag now includes the semver — `The Ledger v0.9.3 — Collectibles Inventory`. Visible in the browser tab, in bookmarks, and on the OS task switcher. The static title in `index.html` carries a sensible hardcoded value (for SEO + social shares + pre-JS render); `init()` then rewrites `document.title` from `APP_VERSION` on load, so the single source of truth still wins and anyone forgetting to bump the static value gets it overwritten anyway.
 
 ### v0.9.2 — Auto-demo on first visit + per-item photos (2026-05-16)
 
