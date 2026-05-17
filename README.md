@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.9.6** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.10.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,16 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.10.0 — Settings panel (2026-05-16)
+
+Adds a gear icon to the toolbar (left of Import) that opens a Settings modal with three sections:
+
+- **About** — current version, item count, and sync status (Guest / Signed in as X / Demo mode). Refreshes every time the modal opens.
+- **Demo** — a "Re-enable demo on next visit" button that clears the `theLedger.demoDismissed.v1` flag, so auto-demo will fire again the next time you load the page. Useful if you exited demo once but want to see the populated app again.
+- **Danger zone** — a "Wipe local data" button (red) that clears `theLedger.inventory.v1`, the settings key, the demo flag, and the user-Beanies key from this device's localStorage. Confirms first. If signed in, also signs out first; cloud data is **not** touched — your items reappear after signing in again. If guest, the wipe is permanent for that data (export a JSON backup first if you want to keep it). Copy adapts to which mode you're in.
+
+After wipe, the page reloads so the app reinitializes cleanly (and auto-demo fires again, since the dismissal flag is gone).
 
 ### v0.9.6 — Hide footer "Try the demo" while already in demo (2026-05-16)
 
