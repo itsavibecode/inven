@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.10.1** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.10.2** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,12 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.10.2 — Downloadable CSV template (2026-05-16)
+
+The Import modal now has a "Download a CSV template" link beneath the merge/replace options. Clicking it grabs `the-ledger-import-template.csv` with every Ledger field as a header column plus one filled-in example row (a Princess Beanie with realistic values for cost, prices, condition, dates, fees, shipping). Self-managed fields (`id`, `created_at`, `updated_at`, `photos`) are intentionally excluded — they get auto-populated on import.
+
+Workflow: download template → open in Excel/Sheets/Numbers → fill rows → save as CSV → Import. The header row stays in lockstep with `DEFAULT_FIELDS` so the template never drifts from the schema.
 
 ### v0.10.1 — eBay Seller Hub CSV bulk import (2026-05-16)
 
