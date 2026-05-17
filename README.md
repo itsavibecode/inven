@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.10.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.10.1** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,26 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.10.1 — eBay Seller Hub CSV bulk import (2026-05-16)
+
+The import flow now auto-detects eBay's exported CSV format and maps it into Ledger items. Drop in your **Seller Hub → Reports → Active listings / Sold listings / Unsold listings** CSV and you'll get one Ledger item per row, with eBay item number, SKU, title, price, quantity, and dates all populated.
+
+Column mapping (covers the common header variants):
+- `Item number` / `Item ID` → `ebay_item_number`
+- `Custom label` / `Custom label (SKU)` / `SKU` → `sku`
+- `Title` → `listing_title` (and `name` as a fallback)
+- `Start price` / `Current price` / `Buy It Now price` → `price`
+- `Sold for` / `Sale price` / `Sold price` → `sold_price`
+- `Start date` → `date_listed`
+- `Sold date` / `Sale date` → `date_sold`
+- `Available quantity` / `Quantity available` / `Quantity` → `quantity`
+
+Status is inferred from the row: if there's a sold price, status becomes **Sold** with `sold_platform = eBay`; otherwise **Listed - eBay**. Currency symbols (`$ £ € ¥`) and thousands commas are stripped off price fields. Dates are normalized to `YYYY-MM-DD` regardless of input format. Category defaults to `Other` since eBay's category IDs don't map cleanly — adjust per item after import.
+
+Detection runs on the first row's header set; if none of the eBay-specific column names are present, the file is treated as a Ledger CSV (existing behavior unchanged). JSON backup imports also unchanged. The success toast now shows which format was detected so it's clear what got imported.
+
+Poshmark export isn't supported — they don't offer a built-in seller CSV. Workaround for now: export a Ledger CSV from another device, or hand-add Poshmark items.
 
 ### v0.10.0 — Settings panel (2026-05-16)
 
