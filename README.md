@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.10.2** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v0.11.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,20 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v0.11.0 — Listing Guides page (2026-05-16)
+
+A new standalone `guides.html` page (linked from the main app footer) with platform-specific tips for getting your inventory listed. Two tabs at the top split coverage between **Online** (ships nationwide) and **Local** (pickup, no shipping) marketplaces.
+
+**Online section** covers eBay, Poshmark, Mercari, Depop, Etsy. Each entry has a one-line "what it's good for," a stats block (title length, photo limits, fees, format quirks), the relevant Ledger export or field mapping, 3-5 quick tips, a screenshot placeholder block, and a deep link to the platform's official seller help docs.
+
+**Local section** covers Facebook Marketplace, Craigslist, OfferUp, Nextdoor — focused on pickup-only flows. Same structure plus universal local-pickup tips (meet in public, cash only, no Zelle to strangers, etc.).
+
+**Screenshot scaffolding.** Each platform section has a dashed placeholder block telling you where to drop PNGs — e.g. `guides-screenshots/ebay/01-listing-form.png`. The page reads cleanly without any screenshots; you can layer them in as you list real items. A `guides-screenshots/README.md` documents the suggested filenames.
+
+iOffer is intentionally not covered — the site shut down in 2019.
+
+Standalone page (`guides.html` + `guides.css`) — no dependency on the main inventory app's JavaScript bundle, no Firebase load, no auth required to view. Loads fast, keeps the inventory UI focused.
 
 ### v0.10.2 — Downloadable CSV template (2026-05-16)
 
