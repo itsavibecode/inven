@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v0.11.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v1.0.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -150,6 +150,37 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v1.0.0 — Stable release (2026-05-19)
+
+The Ledger is feature-complete for a personal collectibles inventory tool. v1.0.0 is the milestone that says "this is the stable public release" — no new features, just a version bump, a mobile-cleanup pass, and this retrospective changelog entry.
+
+**Mobile cleanup in this release:**
+- Modal tab navigation now has a right-edge fade-out gradient + thin scrollbar so users can see there are more tabs to scroll to. Previously the scrollbar was hidden entirely and the tab strip just cut off — easy to miss the Research / Fees / Photos tabs on a narrow phone screen.
+
+**What v1.0 ships with** (full feature surface as of release):
+
+- **Inventory management** — name, SKU, brand, model, size, color, material, country, location, quantity, plus Beanie-specific fields (year, birthday, tag generations, style #, pellets, errors, rarity notes). 124 curated Beanies in the seed DB with auto-suggest on item name.
+- **Cost / fee tracking** — item cost + tax + supplies on the buy side; per-platform fees (eBay insertion / FVF / FVF-on-shipping / per-order, Poshmark, PayPal, Other) on the sell side. Auto-fill standard fees button. Live Profit & Loss summary with margin %.
+- **Pricing Research** — manual entry per platform (eBay / Poshmark / Price Guide) with date stamps + stale badges. Suggested-price avg auto-applies to the listing price field.
+- **Photos** — drag-and-drop with auto-downscale (900px, JPEG q=0.82). Photos sync to Firebase Storage when signed in.
+- **Multi-device sync** — Google sign-in, Firestore data layer, real-time onSnapshot updates. First-sign-in migration prompt for existing local data.
+- **Demo Mode** — 12 AI-generated product-photo demo items auto-load on every visit (until user clicks Exit demo). `?demo=1` URL param shareable. Demo data is purely in-memory — never persisted.
+- **Imports** — Ledger JSON backup, Ledger CSV, eBay Seller Hub CSV (auto-detected). Downloadable CSV template with all 79 fields. Merge or replace.
+- **Exports** — Full JSON backup, CSV, Poshmark listing TXT, eBay File Exchange CSV.
+- **Listing Guides page** — separate `guides.html` with platform-by-platform tips for 9 marketplaces (5 Online, 4 Local) + universal tips. Screenshot scaffolding ready for user-supplied images.
+- **iPhone barcode scanner** — lazy-loaded `barcode-detector` polyfill so iOS Safari / iOS Chrome / Firefox can scan UPCs alongside Chrome/Edge.
+- **Settings panel** — gear icon opens About / Demo controls / Wipe-local-data. Copy adapts to guest vs signed-in.
+- **PWA installable** — site.webmanifest, 192/512 + maskable icons, Chrome install prompt, iOS "Add to Home Screen."
+- **Interactive stat cards** — tap Items / Active / Sold to filter the grid.
+- **Days metrics** — Days Active / Days from listed to sold with qualitative tag (Quick flip / Normal turnover / Slow mover / Long tail).
+- **Lighthouse mobile 91/100** after the v0.8.x perf passes (Firebase lazy-init, async fonts, deferred scripts).
+- **Secondary deployment** at dev.rizzo.cc/inventory via GitHub Action mirror with 5-pass identity scrub. Canonical URL points there.
+- **Tooltips** — info-tip badges on every cost/fee/postage field explaining what it's for.
+- **Footer demo link** — "Try the demo" link in the footer for returning users (hidden while already in demo).
+- **OG + Twitter cards** — 1200×630 OG image generated procedurally, full meta-tag set.
+
+Twenty-some releases got here from a barebones 2026-04-19 web-UI upload. The journey is in this changelog. v1.0.0 marks the line.
 
 ### v0.11.0 — Listing Guides page (2026-05-16)
 
