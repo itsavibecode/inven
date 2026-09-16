@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v1.0.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v1.1.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -64,10 +64,13 @@ Current version: **v1.0.0** — see [Changelog](#changelog) at the bottom for re
 
 ### Import / Export
 - **JSON backup** (full fidelity, includes custom Beanie DB entries, re-importable)
+- **Excel workbook XLSX** (opens directly in Excel / Numbers / Google Sheets, frozen header row)
 - **CSV spreadsheet** (open in Excel / Google Sheets)
 - **Poshmark listings TXT** (formatted, ready to copy-paste)
 - **eBay File Exchange CSV** (upload directly to Seller Hub, includes UPC)
-- Import JSON or CSV with merge or replace modes
+- Import **JSON, XLSX/XLS, or CSV** with merge or replace modes — format auto-detected
+- Import also recognizes an **eBay Seller Hub export** in either CSV or spreadsheet form and maps its columns automatically
+- **Downloadable templates** in both Excel and CSV, with every column plus a filled-in example row
 
 ### Polished UX
 - Grid and table views
@@ -150,6 +153,18 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v1.1.0 — Excel / spreadsheet import and export (2026-09-16)
+
+You can now hand the app a spreadsheet directly instead of exporting to CSV first.
+
+**Import** accepts `.xlsx`, `.xls`, and `.xlsm` alongside the existing JSON and CSV. Pick the file, and the first sheet is read into rows and pushed through the same pipeline CSV already used — which means eBay Seller Hub exports are still auto-detected and column-mapped even when they arrive as a workbook rather than a CSV. Blank cells come through as empty strings and dates/numbers as display text, so nothing silently changes shape on the way in. If a workbook has more than one sheet, the first is used and the toast tells you which one. Google Sheets works the same way — just download as `.xlsx` or `.csv` first.
+
+**Export** gains an **Excel Workbook (XLSX)** option in the Export menu. Same column set as the CSV export, but as a real workbook with a frozen header row and sized columns, so it opens ready to read. It round-trips: export a workbook, re-import it, and you get your items back unchanged.
+
+**Templates** are now offered in both flavors from the Import modal — *Excel template* and *CSV template*. Both carry every column plus one filled-in example row, and both are generated from the live field list at runtime, so they can't drift out of sync when a future release adds a field.
+
+The spreadsheet reader (SheetJS, ~1 MB) is lazy-loaded the first time you touch a spreadsheet — the same approach used for the iOS barcode scanner. Anyone who never imports or exports a workbook never downloads it.
 
 ### v1.0.0 — Stable release (2026-05-19)
 
