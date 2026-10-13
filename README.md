@@ -4,7 +4,7 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v1.1.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v1.2.0** — see [Changelog](#changelog) at the bottom for release history.
 
 ---
 
@@ -71,6 +71,7 @@ Current version: **v1.1.0** — see [Changelog](#changelog) at the bottom for re
 - Import **JSON, XLSX/XLS, or CSV** with merge or replace modes — format auto-detected
 - Import also recognizes an **eBay Seller Hub export** in either CSV or spreadsheet form and maps its columns automatically
 - **Downloadable templates** in both Excel and CSV, with every column plus a filled-in example row
+- **Import a single eBay listing from its link** — paste a live listing URL or item number into the Add Item form and it pulls the title, price, condition, item specifics, and photos (eBay's official Browse API, via a small Cloudflare Worker)
 
 ### Polished UX
 - Grid and table views
@@ -153,6 +154,14 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v1.2.0 — Import a listing from its eBay link (2026-10-13)
+
+For the "I listed it on eBay and forgot to add it here" moment. The Add Item form has a new **Import from an eBay listing** card next to the UPC lookup: paste the listing link (any `ebay.com/itm/...` shape, an `ebay.us` short link, or just the 12-digit item number) and hit **Fetch**. The title, price, condition, description, brand/size/color/material, UPC, listing date, item number, and photos land in the form; the category is picked from eBay's category path (a Beanie Babies listing comes in as a Beanie Baby, a jacket as Clothing, and so on) and status steps up to *Listed - eBay*. Everything is reviewable before you save. The Import modal links to the same card for people who go looking there first.
+
+Why it needs a helper: a static page can't read eBay. Listing pages refuse anything that isn't a real browser, and eBay's API needs a secret that can't live in client-side code. So the lookup goes through a tiny Cloudflare Worker (`inven-worker`) that calls eBay's official **Browse API** and proxies the listing photos into the app's normal photo pipeline. The Worker only answers requests from this app's own origins, so the eBay quota (5,000 lookups a day) can't be burned by strangers. Until its eBay keys are in place the card says so plainly instead of failing.
+
+Fields you already filled in are never overwritten — only blanks are filled — except the eBay item number and link, which are the listing by definition. Only active listings resolve; a sold or ended listing still comes in through the Seller Hub CSV/spreadsheet import.
 
 ### v1.1.0 — Excel / spreadsheet import and export (2026-09-16)
 
