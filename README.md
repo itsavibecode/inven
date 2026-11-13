@@ -1,33 +1,26 @@
-# The Ledger — Collectibles Inventory
+# The Ledger · Collectibles Inventory
 
 A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark mode, modern design. Captures every detail needed for Poshmark and eBay listings, with full import/export.
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v1.2.0** — see [Changelog](#changelog) at the bottom for release history.
+Current version: **v1.2.1**. See the [Changelog](#changelog) at the bottom for release history.
 
 ---
 
 ## What's new in this version
 
-### 🔍 UPC / Barcode lookup
-- Type or paste a UPC/EAN/ISBN — the app queries **Open Food Facts** and **Open Library** (both free, no API key needed) to auto-fill name, brand, country, size, material, and sometimes an image.
-- **Scan with your phone camera** — uses the browser's native `BarcodeDetector` API (works on Chrome and Edge, including mobile). Point camera at barcode, app auto-fills.
-- UPC is stored with the item and exported in the eBay File Exchange CSV.
-- For vintage items where no UPC exists (most Beanie Babies), this gracefully falls back to manual entry — the UPC is just a reference field.
+v1.2.1 is about the part after the sale.
 
-### 🐻 Beanie Baby reference database
-- **120+ curated Beanies** baked in with year, birthday, style #, retirement date, and collector notes on variations and errors that affect value. Tag poems are filled for the original 60 seed entries; the v0.6.0 expansion leaves poems blank — fill them from your physical heart tag, which is the canonical source for that item anyway.
-- **Auto-suggest as you type** the item name — pick a match and it fills year, birthday, poem, style #, and rarity notes.
-- **"Fill from DB"** button in the Beanie Details tab with richer search.
-- **"Save to DB"** button — turn any item you're cataloguing into a reusable reference entry. Your custom entries appear alongside the seed database and sync via JSON backup.
-- Includes all Original 9 Beanies, famous rarities (Princess, Peanut Royal Blue, Humphrey, Garcia, etc.), seasonal Holiday bears, and commonly-confused variations.
+- **Buyer field.** Note who bought each item (an eBay username or a Poshmark buyer name) in Listing & Pricing. It helps in a dispute and when a repeat customer comes back. It is searchable and kept in your backups, but never written into the Poshmark or eBay listing exports. eBay Seller Hub imports fill it from the buyer-username column.
+- **Ship-by date.** A sold item with no shipped date shows "Ship by" and a date on its card and in the table: the sold date plus 3 business days, the window Poshmark gives sellers. Once that day has passed it turns coral and says "(late)". Fill in the new Date Shipped field to clear it; switching the status to Shipped fills in today for you.
+- **Poshmark prepaid label.** Poshmark sales ship on a prepaid label the buyer pays for, so Auto-fill standard fees now sets postage charged and postage paid to 0.00 on Poshmark sales (only when those fields are blank).
+- **Easier to read and use.** Stronger text contrast, a visible focus ring for keyboard users, 44 px tap targets on phones, a "No items match these filters" panel with a Clear filters button, and safe-area padding for the iPhone home-screen app.
+- **Photo fix.** If a photo upload to the cloud fails, the photos now stay on the item instead of disappearing from the screen.
 
-### 🎨 New design
-- **Dark mode** with charcoal base, teal accents, and modern Geist typography
-- **Refined status colors**: amber for ready-to-list, purple for Poshmark, blue for eBay, teal for both, green for sold
-- Subtle ambient glow and proper hover states throughout
-- Real favicon (plush bear with heart tag)
+Also recent, from the previous release: **import a listing from its eBay link**. Paste a listing link or item number into the Add Item form and it pulls in the title, price, condition, item specifics, and photos.
+
+The [Changelog](#changelog) has the full story of each release.
 
 ---
 
@@ -37,18 +30,34 @@ Current version: **v1.2.0** — see [Changelog](#changelog) at the bottom for re
 - Dedicated **Beanie Details** tab: year released, date of birth, tag poem, **swing/heart tag generation (1st–18th gen)**, tush tag generation, tag conditions, style/PE number, PVC vs PE pellets, errors & variations, rarity notes.
 - Expandable to **12+ categories**: plush, clothing, shoes, accessories, jewelry, electronics, home decor, books, trading cards, toys, vintage, and more.
 
+### Beanie Baby reference database
+- **Over a hundred curated Beanies** built in, with year, birthday, style #, retirement date, and collector notes on the variations and errors that affect value. The Beanie Details tab shows the exact count. Tag poems are filled for the original 60 seed entries; the v0.6.0 expansion leaves poems blank, so fill them from your physical heart tag, which is the canonical source anyway.
+- **Auto-suggest as you type** the item name. Pick a match and it fills year, birthday, poem, style #, and rarity notes.
+- **"Fill from DB"** search in the Beanie Details tab.
+- **"Save to DB"** turns any item you are cataloguing into a reusable reference entry. Your custom entries appear alongside the built-in ones and travel with the JSON backup.
+- Includes all Original 9 Beanies, famous rarities (Princess, Peanut Royal Blue, Humphrey, Garcia, etc.), seasonal Holiday bears, and commonly-confused variations.
+
+### UPC / barcode lookup
+- Type or paste a UPC/EAN/ISBN and the app queries **Open Food Facts** and **Open Library** (both free, no API key needed) to auto-fill name, brand, country, size, material, and sometimes an image.
+- **Scan with your phone camera.** Uses the browser's native `BarcodeDetector` API where it exists, and a lazy-loaded polyfill everywhere else (see the browser list below).
+- UPC is stored with the item and exported in the eBay File Exchange CSV.
+- For vintage items with no UPC (most Beanie Babies), manual entry works as usual; the UPC is just a reference field.
+
 ### Listing-ready information capture
 - Listing title with **live Poshmark (50) / eBay (80) character counter**
 - Auto-built description that combines all details from every tab
 - Tags/keywords, cost, asking price, minimum accept, sold price
 - Platform tracking (Poshmark, eBay, Mercari, Facebook, local)
 - Direct listing URL storage
-- 8 status states from Draft → Ready → Listed → Sold → Shipped → Archived
+- 8 status states: Draft, Ready to List, Listed (Poshmark, eBay, or both), Sold, Shipped, Archived
+- **Buyer** field for the buyer's username or name: private, searchable, never included in listing exports
 
 ### Shipping & packaging
 - Weight (oz/lb/g/kg) and package dimensions (in/cm)
 - Package type presets (poly mailer, padded, USPS flat-rate sizes, etc.)
 - Carrier selection and shipping cost tracking
+- **Ship-by reminder**: a Sold item with no Date Shipped shows "Ship by" and its date (sold date plus 3 business days) on the card and in the table, in coral with "(late)" once overdue. Setting status to Shipped fills Date Shipped with today.
+- **Poshmark prepaid label**: Auto-fill standard fees sets postage charged and postage paid to 0.00 for Poshmark sales (blank fields only), because the buyer pays Poshmark for the label
 - Inventory number (SKU) to **physically mark on your package**
 
 ### Condition & authenticity
@@ -68,29 +77,37 @@ Current version: **v1.2.0** — see [Changelog](#changelog) at the bottom for re
 - **CSV spreadsheet** (open in Excel / Google Sheets)
 - **Poshmark listings TXT** (formatted, ready to copy-paste)
 - **eBay File Exchange CSV** (upload directly to Seller Hub, includes UPC)
-- Import **JSON, XLSX/XLS, or CSV** with merge or replace modes — format auto-detected
+- Import **JSON, XLSX/XLS, or CSV** with merge or replace modes; the format is auto-detected
 - Import also recognizes an **eBay Seller Hub export** in either CSV or spreadsheet form and maps its columns automatically
 - **Downloadable templates** in both Excel and CSV, with every column plus a filled-in example row
-- **Import a single eBay listing from its link** — paste a live listing URL or item number into the Add Item form and it pulls the title, price, condition, item specifics, and photos (eBay's official Browse API, via a small Cloudflare Worker)
+- **Import a single eBay listing from its link**: paste a live listing URL or item number into the Add Item form and it pulls the title, price, condition, item specifics, and photos (eBay's official Browse API, via a small Cloudflare Worker)
 
 ### Polished UX
 - Grid and table views
-- Live search across names, SKUs, **UPCs**, tags, locations
+- Live search across names, SKUs, **UPCs**, tags, locations, buyers
+- A "No items match these filters" panel names the active filters and clears them in one click
 - Category/status filters, multi-key sorting
 - Keyboard shortcuts: `Esc` closes modals, `Cmd/Ctrl+S` saves, `Cmd/Ctrl+N` new item
-- Fully responsive — works on phones (barcode scanner needs HTTPS, which GitHub Pages provides)
+- Fully responsive: works on phones (barcode scanner needs HTTPS, which GitHub Pages provides), with 44 px tap targets and safe-area padding for the iPhone home-screen app
+- Keyboard friendly: every control, item card, and tooltip badge shows a teal focus ring
+
+### Design
+- **Dark mode** with a charcoal base, teal accents, and Geist typography
+- **Status colors**: amber for ready-to-list, purple for Poshmark, blue for eBay, teal for both, green for sold
+- Text colors checked against WCAG AA on every surface
+- Favicon and home-screen icon: a plush bear with a heart tag
 
 ---
 
 ## Deploy to GitHub Pages (free hosting)
 
 1. Create a new repo on GitHub (e.g. `inventory`).
-2. Upload all five files: `index.html`, `styles.css`, `app.js`, `beanie-db.js`, `favicon.svg`.
+2. Upload every file listed under [File structure](#file-structure) below.
 3. Go to **Settings → Pages**.
 4. Under **Source**, pick `Deploy from a branch` → select `main` branch, `/ (root)` folder, click **Save**.
 5. Wait 30-60 seconds. Your site will be live at `https://YOUR-USERNAME.github.io/inventory/`
 
-That's it — no build step, no framework, no database server.
+That's it: no build step, no framework, no database server.
 
 **Important:** The barcode scanner requires camera access, which browsers only grant over HTTPS. GitHub Pages serves over HTTPS automatically, so it works. If you open the files directly with `file://`, the scanner won't work but everything else will.
 
@@ -101,24 +118,24 @@ Just double-click `index.html`. Works offline (UPC lookup needs internet, but ev
 
 ## Data & storage
 
-The Ledger has two storage modes — pick whichever fits how you use it.
+The Ledger has two storage modes. Pick whichever fits how you use it.
 
 ### Guest mode (default)
 - Everything lives in your browser's **localStorage**. Nothing leaves the device except anonymous UPC lookups to Open Food Facts and Open Library.
-- **Export regularly** — if you clear browser data or switch devices, you lose everything without a backup.
+- **Export regularly**: if you clear browser data or switch devices, you lose everything without a backup.
 - Custom Beanie DB entries are included in JSON backups.
 - localStorage typically caps around 5–10 MB per site. Photos are auto-compressed.
 
 ### Signed-in mode (optional)
 - Click **"Sign in with Google to sync"** at the top. Inventory items and your custom Beanie DB entries sync to **Cloud Firestore** in real time across every device you're signed in on. Photos sync to **Firebase Storage**.
-- Your data lives at `/users/{your uid}/...` in Firebase, locked to you by Firestore and Storage rules — no other account can see it.
+- Your data lives at `/users/{your uid}/...` in Firebase, locked to you by Firestore and Storage rules, so no other account can see it.
 - The first time you sign in on a device that already has guest-mode items, you're prompted to upload them to your account in a single click. Your local copy stays as a backup either way.
 - Sign out at any time to drop back to guest mode. localStorage isn't cleared on sign-out.
 - **Browser cache caveat:** if you ship a new release, bump the cache-bust query strings on the script tags in `index.html` (the `?v=…` part) so users on a stale browser cache get the new JS.
 
 ### Self-hosting (forking)
 
-The committed `firebase-config.js` points at itsavibecode's Firebase project. If you fork this repo and want your own backend, replace that file with your project's config and paste both `firestore.rules` and `storage.rules` into your Firebase console. Sign-in still works against the original project until you swap the config — useful for trying it out.
+The committed `firebase-config.js` points at itsavibecode's Firebase project. If you fork this repo and want your own backend, replace that file with your project's config and paste both `firestore.rules` and `storage.rules` into your Firebase console. Sign-in still works against the original project until you swap the config, which is useful for trying it out.
 
 ---
 
@@ -126,12 +143,12 @@ The committed `firebase-config.js` points at itsavibecode's Firebase project. If
 
 Barcode scanning works on every modern browser as of v0.4.0:
 
-- ✅ Chrome (desktop & mobile) — uses the native `BarcodeDetector` API
-- ✅ Edge (desktop & mobile) — native
-- ✅ Samsung Internet — native
-- ✅ Opera — native
-- ✅ Safari (iOS / macOS) — uses a WASM-backed polyfill, lazy-loaded only when the native API is missing so non-Safari users don't pay the bytes
-- ✅ Firefox — same polyfill path as Safari
+- Chrome (desktop & mobile): uses the native `BarcodeDetector` API
+- Edge (desktop & mobile): native
+- Samsung Internet: native
+- Opera: native
+- Safari (iOS / macOS): uses a WASM-backed polyfill, lazy-loaded only when the native API is missing so non-Safari users don't pay the bytes
+- Firefox: same polyfill path as Safari
 
 Camera access is HTTPS-only (browser policy). GitHub Pages serves over HTTPS, so the live URL works; opening `index.html` from `file://` won't.
 
@@ -140,13 +157,29 @@ Camera access is HTTPS-only (browser policy). GitHub Pages serves over HTTPS, so
 ## File structure
 
 ```
-inventory/
-├── index.html      # Single-page app markup
-├── styles.css      # Dark mode theme
-├── app.js          # All logic (CRUD, lookups, import/export)
-├── beanie-db.js    # Curated Beanie Baby reference data
-├── favicon.svg     # Plush bear icon
-└── README.md       # This file
+inven/
+|-- index.html            # Single-page app markup
+|-- styles.css            # Dark theme and layout
+|-- app.js                # All app logic (CRUD, lookups, import/export, sync)
+|-- beanie-db.js          # Curated Beanie Baby reference data
+|-- demo-data.js          # In-memory sample items for demo mode
+|-- firebase-config.js    # Firebase project config + lazy Auth/Firestore/Storage bridge
+|-- firestore.rules       # Firestore security rules (paste into the Firebase console)
+|-- storage.rules         # Storage security rules (paste into the Firebase console)
+|-- guides.html           # Listing guides page
+|-- guides.css            # Styles for the guides page
+|-- guides-screenshots/   # Drop-in screenshots for the guides page (README inside)
+|-- demo-photos/          # Product photos for the demo items
+|-- site.webmanifest      # PWA manifest (home-screen install)
+|-- favicon.svg           # Plush bear icon
+|-- apple-touch-icon.png  # iOS home-screen icon
+|-- icon-192.png          # PWA icons
+|-- icon-512.png
+|-- icon-512-maskable.png
+|-- og-image.png          # Social share card (1200x630)
+|-- .scripts/             # Build helpers: OG image, demo photos, Lighthouse summary
+|-- .github/workflows/    # mirror-to-dev.yml: mirrors the site to dev.rizzo.cc/inventory
+`-- README.md             # This file
 ```
 
 No `node_modules`. No build step. Just open and use.
@@ -155,78 +188,97 @@ No `node_modules`. No build step. Just open and use.
 
 ## Changelog
 
-### v1.2.0 — Import a listing from its eBay link (2026-10-13)
+### v1.2.1: Buyer, ship-by date, Poshmark prepaid label, and an accessibility pass (2026-11-13)
+
+A Poshmark order page made two gaps obvious. Poshmark sales ship on a prepaid label the buyer has already paid for, and the page gives the seller 3 business days to ship. The Ledger could show neither, so this release adds both, plus a place to note who bought the item.
+
+- **Buyer** (Listing & Pricing): free text for the buyer's username or name, useful in a dispute and for spotting repeat customers. It is kept in your own backups (JSON, CSV, Excel) and in search, but never in the Poshmark TXT or eBay File Exchange listing exports. Seller Hub imports read it from the "Buyer username" or "Buyer name" column.
+- **Date Shipped and the ship-by line**: a Sold item without a shipped date shows "Ship by" and a date (the sold date plus 3 business days, weekends skipped) on its card and in the table's status cell. Once that date has passed the line turns coral and adds "(late)". Setting the status to Shipped fills Date Shipped with today, unless you already typed a date.
+- **Prepaid label**: for Poshmark sales, Auto-fill standard fees sets postage charged and postage paid to 0.00 when they are blank, and the Shipping tab explains why.
+
+An accessibility and copy audit found several things that made the app harder to read or use. All are fixed here:
+
+- Em dashes were scattered through the interface text. They are gone; an empty value now shows a short en dash.
+- The Archived status pill failed contrast (2.6:1). It now passes, and so do the footer, the research disclaimer, and the photo placeholder. The muted text color moved up a notch so it passes WCAG AA on every surface it sits on.
+- Focus rings were faint or missing. Every button, link, field, item card, table row, and tooltip badge now shows a clear teal ring when you tab to it, and cards and rows open with Enter.
+- Several phone buttons were smaller than 44 px. They are now at least 44 px tall.
+- Filtering down to nothing showed a blank page. A "No items match these filters" panel now says which filters are on and offers a Clear filters button.
+- Smaller fixes: the sort menu says "A to Z" instead of arrows; the demo banner and the guides page lost their emoji; the Beanie database count is read from the data instead of hardcoded copy; the toolbar no longer blurs what scrolls under it; stat labels are a little larger; the packaging options read "Yes, original box" (older saves convert automatically); and the iPhone home-screen app keeps its bars clear of the notch and the home indicator.
+
+**Bug fix: photos vanishing after a failed upload.** When a signed-in save could not upload its photos to cloud storage (a full storage quota, in the case that surfaced it), the item was saved to the cloud without them, and the cloud's echo then replaced the item on screen. The photos looked deleted even though this device still had them. The app now keeps the local photos when that happens.
+
+### v1.2.0: Import a listing from its eBay link (2026-10-13)
 
 For the "I listed it on eBay and forgot to add it here" moment. The Add Item form has a new **Import from an eBay listing** card next to the UPC lookup: paste the listing link (any `ebay.com/itm/...` shape, an `ebay.us` short link, or just the 12-digit item number) and hit **Fetch**. The title, price, condition, description, brand/size/color/material, UPC, listing date, item number, and photos land in the form; the category is picked from eBay's category path (a Beanie Babies listing comes in as a Beanie Baby, a jacket as Clothing, and so on) and status steps up to *Listed - eBay*. Everything is reviewable before you save. The Import modal links to the same card for people who go looking there first.
 
 Why it needs a helper: a static page can't read eBay. Listing pages refuse anything that isn't a real browser, and eBay's API needs a secret that can't live in client-side code. So the lookup goes through a tiny Cloudflare Worker (`inven-worker`) that calls eBay's official **Browse API** and proxies the listing photos into the app's normal photo pipeline. The Worker only answers requests from this app's own origins, so the eBay quota (5,000 lookups a day) can't be burned by strangers. Until its eBay keys are in place the card says so plainly instead of failing.
 
-Fields you already filled in are never overwritten — only blanks are filled — except the eBay item number and link, which are the listing by definition. Only active listings resolve; a sold or ended listing still comes in through the Seller Hub CSV/spreadsheet import.
+Fields you already filled in are never overwritten (only blanks are filled), except the eBay item number and link, which are the listing by definition. Only active listings resolve; a sold or ended listing still comes in through the Seller Hub CSV/spreadsheet import.
 
-### v1.1.0 — Excel / spreadsheet import and export (2026-09-16)
+### v1.1.0: Excel / spreadsheet import and export (2026-09-16)
 
 You can now hand the app a spreadsheet directly instead of exporting to CSV first.
 
-**Import** accepts `.xlsx`, `.xls`, and `.xlsm` alongside the existing JSON and CSV. Pick the file, and the first sheet is read into rows and pushed through the same pipeline CSV already used — which means eBay Seller Hub exports are still auto-detected and column-mapped even when they arrive as a workbook rather than a CSV. Blank cells come through as empty strings and dates/numbers as display text, so nothing silently changes shape on the way in. If a workbook has more than one sheet, the first is used and the toast tells you which one. Google Sheets works the same way — just download as `.xlsx` or `.csv` first.
+**Import** accepts `.xlsx`, `.xls`, and `.xlsm` alongside the existing JSON and CSV. Pick the file, and the first sheet is read into rows and pushed through the same pipeline CSV already used, which means eBay Seller Hub exports are still auto-detected and column-mapped even when they arrive as a workbook rather than a CSV. Blank cells come through as empty strings and dates/numbers as display text, so nothing silently changes shape on the way in. If a workbook has more than one sheet, the first is used and the toast tells you which one. Google Sheets works the same way: download as `.xlsx` or `.csv` first.
 
 **Export** gains an **Excel Workbook (XLSX)** option in the Export menu. Same column set as the CSV export, but as a real workbook with a frozen header row and sized columns, so it opens ready to read. It round-trips: export a workbook, re-import it, and you get your items back unchanged.
 
-**Templates** are now offered in both flavors from the Import modal — *Excel template* and *CSV template*. Both carry every column plus one filled-in example row, and both are generated from the live field list at runtime, so they can't drift out of sync when a future release adds a field.
+**Templates** are now offered in both flavors from the Import modal: *Excel template* and *CSV template*. Both carry every column plus one filled-in example row, and both are generated from the live field list at runtime, so they can't drift out of sync when a future release adds a field.
 
-The spreadsheet reader (SheetJS, ~1 MB) is lazy-loaded the first time you touch a spreadsheet — the same approach used for the iOS barcode scanner. Anyone who never imports or exports a workbook never downloads it.
+The spreadsheet reader (SheetJS, ~1 MB) is lazy-loaded the first time you touch a spreadsheet, the same approach used for the iOS barcode scanner. Anyone who never imports or exports a workbook never downloads it.
 
-### v1.0.0 — Stable release (2026-05-19)
+### v1.0.0: Stable release (2026-05-19)
 
-The Ledger is feature-complete for a personal collectibles inventory tool. v1.0.0 is the milestone that says "this is the stable public release" — no new features, just a version bump, a mobile-cleanup pass, and this retrospective changelog entry.
+The Ledger is feature-complete for a personal collectibles inventory tool. v1.0.0 is the milestone that says "this is the stable public release": no new features, just a version bump, a mobile-cleanup pass, and this retrospective changelog entry.
 
 **Mobile cleanup in this release:**
-- Modal tab navigation now has a right-edge fade-out gradient + thin scrollbar so users can see there are more tabs to scroll to. Previously the scrollbar was hidden entirely and the tab strip just cut off — easy to miss the Research / Fees / Photos tabs on a narrow phone screen.
+- Modal tab navigation now has a right-edge fade-out gradient + thin scrollbar so users can see there are more tabs to scroll to. Previously the scrollbar was hidden entirely and the tab strip just cut off, so it was easy to miss the Research / Fees / Photos tabs on a narrow phone screen.
 
 **What v1.0 ships with** (full feature surface as of release):
 
-- **Inventory management** — name, SKU, brand, model, size, color, material, country, location, quantity, plus Beanie-specific fields (year, birthday, tag generations, style #, pellets, errors, rarity notes). 124 curated Beanies in the seed DB with auto-suggest on item name.
-- **Cost / fee tracking** — item cost + tax + supplies on the buy side; per-platform fees (eBay insertion / FVF / FVF-on-shipping / per-order, Poshmark, PayPal, Other) on the sell side. Auto-fill standard fees button. Live Profit & Loss summary with margin %.
-- **Pricing Research** — manual entry per platform (eBay / Poshmark / Price Guide) with date stamps + stale badges. Suggested-price avg auto-applies to the listing price field.
-- **Photos** — drag-and-drop with auto-downscale (900px, JPEG q=0.82). Photos sync to Firebase Storage when signed in.
-- **Multi-device sync** — Google sign-in, Firestore data layer, real-time onSnapshot updates. First-sign-in migration prompt for existing local data.
-- **Demo Mode** — 12 AI-generated product-photo demo items auto-load on every visit (until user clicks Exit demo). `?demo=1` URL param shareable. Demo data is purely in-memory — never persisted.
-- **Imports** — Ledger JSON backup, Ledger CSV, eBay Seller Hub CSV (auto-detected). Downloadable CSV template with all 79 fields. Merge or replace.
-- **Exports** — Full JSON backup, CSV, Poshmark listing TXT, eBay File Exchange CSV.
-- **Listing Guides page** — separate `guides.html` with platform-by-platform tips for 9 marketplaces (5 Online, 4 Local) + universal tips. Screenshot scaffolding ready for user-supplied images.
-- **iPhone barcode scanner** — lazy-loaded `barcode-detector` polyfill so iOS Safari / iOS Chrome / Firefox can scan UPCs alongside Chrome/Edge.
-- **Settings panel** — gear icon opens About / Demo controls / Wipe-local-data. Copy adapts to guest vs signed-in.
-- **PWA installable** — site.webmanifest, 192/512 + maskable icons, Chrome install prompt, iOS "Add to Home Screen."
-- **Interactive stat cards** — tap Items / Active / Sold to filter the grid.
-- **Days metrics** — Days Active / Days from listed to sold with qualitative tag (Quick flip / Normal turnover / Slow mover / Long tail).
+- **Inventory management**: name, SKU, brand, model, size, color, material, country, location, quantity, plus Beanie-specific fields (year, birthday, tag generations, style #, pellets, errors, rarity notes). 124 curated Beanies in the seed DB with auto-suggest on item name.
+- **Cost / fee tracking**: item cost + tax + supplies on the buy side; per-platform fees (eBay insertion / FVF / FVF-on-shipping / per-order, Poshmark, PayPal, Other) on the sell side. Auto-fill standard fees button. Live Profit & Loss summary with margin %.
+- **Pricing Research**: manual entry per platform (eBay / Poshmark / Price Guide) with date stamps + stale badges. Suggested-price avg auto-applies to the listing price field.
+- **Photos**: drag-and-drop with auto-downscale (900px, JPEG q=0.82). Photos sync to Firebase Storage when signed in.
+- **Multi-device sync**: Google sign-in, Firestore data layer, real-time onSnapshot updates. First-sign-in migration prompt for existing local data.
+- **Demo Mode**: 12 AI-generated product-photo demo items auto-load on every visit (until user clicks Exit demo). `?demo=1` URL param shareable. Demo data is purely in-memory and never persisted.
+- **Imports**: Ledger JSON backup, Ledger CSV, eBay Seller Hub CSV (auto-detected). Downloadable CSV template with all 79 fields. Merge or replace.
+- **Exports**: Full JSON backup, CSV, Poshmark listing TXT, eBay File Exchange CSV.
+- **Listing Guides page**: separate `guides.html` with platform-by-platform tips for 9 marketplaces (5 Online, 4 Local) + universal tips. Screenshot scaffolding ready for user-supplied images.
+- **iPhone barcode scanner**: lazy-loaded `barcode-detector` polyfill so iOS Safari / iOS Chrome / Firefox can scan UPCs alongside Chrome/Edge.
+- **Settings panel**: gear icon opens About / Demo controls / Wipe-local-data. Copy adapts to guest vs signed-in.
+- **PWA installable**: site.webmanifest, 192/512 + maskable icons, Chrome install prompt, iOS "Add to Home Screen."
+- **Interactive stat cards**: tap Items / Active / Sold to filter the grid.
+- **Days metrics**: Days Active / Days from listed to sold with qualitative tag (Quick flip / Normal turnover / Slow mover / Long tail).
 - **Lighthouse mobile 91/100** after the v0.8.x perf passes (Firebase lazy-init, async fonts, deferred scripts).
 - **Secondary deployment** at dev.rizzo.cc/inventory via GitHub Action mirror with 5-pass identity scrub. Canonical URL points there.
-- **Tooltips** — info-tip badges on every cost/fee/postage field explaining what it's for.
-- **Footer demo link** — "Try the demo" link in the footer for returning users (hidden while already in demo).
-- **OG + Twitter cards** — 1200×630 OG image generated procedurally, full meta-tag set.
+- **Tooltips**: info-tip badges on every cost/fee/postage field explaining what it's for.
+- **Footer demo link**: "Try the demo" link in the footer for returning users (hidden while already in demo).
+- **OG + Twitter cards**: 1200×630 OG image generated procedurally, full meta-tag set.
 
 Twenty-some releases got here from a barebones 2026-04-19 web-UI upload. The journey is in this changelog. v1.0.0 marks the line.
 
-### v0.11.0 — Listing Guides page (2026-05-16)
+### v0.11.0: Listing Guides page (2026-05-16)
 
 A new standalone `guides.html` page (linked from the main app footer) with platform-specific tips for getting your inventory listed. Two tabs at the top split coverage between **Online** (ships nationwide) and **Local** (pickup, no shipping) marketplaces.
 
 **Online section** covers eBay, Poshmark, Mercari, Depop, Etsy. Each entry has a one-line "what it's good for," a stats block (title length, photo limits, fees, format quirks), the relevant Ledger export or field mapping, 3-5 quick tips, a screenshot placeholder block, and a deep link to the platform's official seller help docs.
 
-**Local section** covers Facebook Marketplace, Craigslist, OfferUp, Nextdoor — focused on pickup-only flows. Same structure plus universal local-pickup tips (meet in public, cash only, no Zelle to strangers, etc.).
+**Local section** covers Facebook Marketplace, Craigslist, OfferUp, Nextdoor, focused on pickup-only flows. Same structure plus universal local-pickup tips (meet in public, cash only, no Zelle to strangers, etc.).
 
-**Screenshot scaffolding.** Each platform section has a dashed placeholder block telling you where to drop PNGs — e.g. `guides-screenshots/ebay/01-listing-form.png`. The page reads cleanly without any screenshots; you can layer them in as you list real items. A `guides-screenshots/README.md` documents the suggested filenames.
+**Screenshot scaffolding.** Each platform section has a dashed placeholder block telling you where to drop PNGs, e.g. `guides-screenshots/ebay/01-listing-form.png`. The page reads cleanly without any screenshots; you can layer them in as you list real items. A `guides-screenshots/README.md` documents the suggested filenames.
 
-iOffer is intentionally not covered — the site shut down in 2019.
+iOffer is intentionally not covered: the site shut down in 2019.
 
-Standalone page (`guides.html` + `guides.css`) — no dependency on the main inventory app's JavaScript bundle, no Firebase load, no auth required to view. Loads fast, keeps the inventory UI focused.
+Standalone page (`guides.html` + `guides.css`) with no dependency on the main inventory app's JavaScript bundle, no Firebase load, no auth required to view. Loads fast, keeps the inventory UI focused.
 
-### v0.10.2 — Downloadable CSV template (2026-05-16)
+### v0.10.2: Downloadable CSV template (2026-05-16)
 
-The Import modal now has a "Download a CSV template" link beneath the merge/replace options. Clicking it grabs `the-ledger-import-template.csv` with every Ledger field as a header column plus one filled-in example row (a Princess Beanie with realistic values for cost, prices, condition, dates, fees, shipping). Self-managed fields (`id`, `created_at`, `updated_at`, `photos`) are intentionally excluded — they get auto-populated on import.
+The Import modal now has a "Download a CSV template" link beneath the merge/replace options. Clicking it grabs `the-ledger-import-template.csv` with every Ledger field as a header column plus one filled-in example row (a Princess Beanie with realistic values for cost, prices, condition, dates, fees, shipping). Self-managed fields (`id`, `created_at`, `updated_at`, `photos`) are intentionally excluded; they get auto-populated on import.
 
 Workflow: download template → open in Excel/Sheets/Numbers → fill rows → save as CSV → Import. The header row stays in lockstep with `DEFAULT_FIELDS` so the template never drifts from the schema.
 
-### v0.10.1 — eBay Seller Hub CSV bulk import (2026-05-16)
+### v0.10.1: eBay Seller Hub CSV bulk import (2026-05-16)
 
 The import flow now auto-detects eBay's exported CSV format and maps it into Ledger items. Drop in your **Seller Hub → Reports → Active listings / Sold listings / Unsold listings** CSV and you'll get one Ledger item per row, with eBay item number, SKU, title, price, quantity, and dates all populated.
 
@@ -240,106 +292,106 @@ Column mapping (covers the common header variants):
 - `Sold date` / `Sale date` → `date_sold`
 - `Available quantity` / `Quantity available` / `Quantity` → `quantity`
 
-Status is inferred from the row: if there's a sold price, status becomes **Sold** with `sold_platform = eBay`; otherwise **Listed - eBay**. Currency symbols (`$ £ € ¥`) and thousands commas are stripped off price fields. Dates are normalized to `YYYY-MM-DD` regardless of input format. Category defaults to `Other` since eBay's category IDs don't map cleanly — adjust per item after import.
+Status is inferred from the row: if there's a sold price, status becomes **Sold** with `sold_platform = eBay`; otherwise **Listed - eBay**. Currency symbols (`$ £ € ¥`) and thousands commas are stripped off price fields. Dates are normalized to `YYYY-MM-DD` regardless of input format. Category defaults to `Other` since eBay's category IDs don't map cleanly, so adjust per item after import.
 
 Detection runs on the first row's header set; if none of the eBay-specific column names are present, the file is treated as a Ledger CSV (existing behavior unchanged). JSON backup imports also unchanged. The success toast now shows which format was detected so it's clear what got imported.
 
-Poshmark export isn't supported — they don't offer a built-in seller CSV. Workaround for now: export a Ledger CSV from another device, or hand-add Poshmark items.
+Poshmark export isn't supported: they don't offer a built-in seller CSV. Workaround for now: export a Ledger CSV from another device, or hand-add Poshmark items.
 
-### v0.10.0 — Settings panel (2026-05-16)
+### v0.10.0: Settings panel (2026-05-16)
 
 Adds a gear icon to the toolbar (left of Import) that opens a Settings modal with three sections:
 
-- **About** — current version, item count, and sync status (Guest / Signed in as X / Demo mode). Refreshes every time the modal opens.
-- **Demo** — a "Re-enable demo on next visit" button that clears the `theLedger.demoDismissed.v1` flag, so auto-demo will fire again the next time you load the page. Useful if you exited demo once but want to see the populated app again.
-- **Danger zone** — a "Wipe local data" button (red) that clears `theLedger.inventory.v1`, the settings key, the demo flag, and the user-Beanies key from this device's localStorage. Confirms first. If signed in, also signs out first; cloud data is **not** touched — your items reappear after signing in again. If guest, the wipe is permanent for that data (export a JSON backup first if you want to keep it). Copy adapts to which mode you're in.
+- **About**: current version, item count, and sync status (Guest / Signed in as X / Demo mode). Refreshes every time the modal opens.
+- **Demo**: a "Re-enable demo on next visit" button that clears the `theLedger.demoDismissed.v1` flag, so auto-demo will fire again the next time you load the page. Useful if you exited demo once but want to see the populated app again.
+- **Danger zone**: a "Wipe local data" button (red) that clears `theLedger.inventory.v1`, the settings key, the demo flag, and the user-Beanies key from this device's localStorage. Confirms first. If signed in, also signs out first; cloud data is **not** touched, and your items reappear after signing in again. If guest, the wipe is permanent for that data (export a JSON backup first if you want to keep it). Copy adapts to which mode you're in.
 
 After wipe, the page reloads so the app reinitializes cleanly (and auto-demo fires again, since the dismissal flag is gone).
 
-### v0.9.6 — Hide footer "Try the demo" while already in demo (2026-05-16)
+### v0.9.6: Hide footer "Try the demo" while already in demo (2026-05-16)
 
-The footer "Try the demo" link is now hidden (along with its leading dot separator) when `body.demo-mode` is active — clicking it from within demo would be a no-op anyway. Implemented as a CSS rule, so it toggles instantly when `enterDemoMode`/`exitDemoMode` adds or removes the body class. Link still appears for guests in the empty state and for signed-in users who want to revisit the demo.
+The footer "Try the demo" link is now hidden (along with its leading dot separator) when `body.demo-mode` is active, since clicking it from within demo would be a no-op anyway. Implemented as a CSS rule, so it toggles instantly when `enterDemoMode`/`exitDemoMode` adds or removes the body class. Link still appears for guests in the empty state and for signed-in users who want to revisit the demo.
 
-### v0.9.5 — AI-generated demo product photos + always-on auto-demo (2026-05-16)
+### v0.9.5: AI-generated demo product photos + always-on auto-demo (2026-05-16)
 
-**Real photos for every demo item.** The v0.9.4 SVG silhouettes were placeholders — v0.9.5 replaces them with 12 AI-generated product-photo JPEGs in `demo-photos/`, one per demo item. Princess is a purple plush teddy bear with a white rose; Peanut Royal Blue is a recognizable blue elephant plush; Rex is an orange tie-dye T-Rex; the Levi's jacket is a medium-wash denim trucker shot lay-flat. Each ~20-30 KB, served direct from the repo — no runtime dependency on the image-gen service.
+**Real photos for every demo item.** The v0.9.4 SVG silhouettes were placeholders; v0.9.5 replaces them with 12 AI-generated product-photo JPEGs in `demo-photos/`, one per demo item. Princess is a purple plush teddy bear with a white rose; Peanut Royal Blue is a recognizable blue elephant plush; Rex is an orange tie-dye T-Rex; the Levi's jacket is a medium-wash denim trucker shot lay-flat. Each ~20-30 KB, served direct from the repo, with no runtime dependency on the image-gen service.
 
-Generation script committed at `.scripts/build-demo-photos.py` — uses Pollinations.ai (free, no-auth) with fixed seeds per item so the photos are reproducible. Re-run any time you want to refresh or tweak prompts.
+Generation script committed at `.scripts/build-demo-photos.py`. It uses Pollinations.ai (free, no-auth) with fixed seeds per item so the photos are reproducible. Re-run any time you want to refresh or tweak prompts.
 
-**Auto-demo now loads on every visit, not just the first.** Previous logic set a flag on the first auto-demo and never showed it again. That meant visitors with cleared inventory still saw an empty state on repeat visits. New rule: auto-demo every load when there's no inventory data and no user — *unless* the visitor explicitly clicked "Exit demo" once. The new `theLedger.demoDismissed.v1` flag tracks only that deliberate dismissal; sign-in-driven exits (e.g. Firebase session restoring) don't write the flag, so signing out later restores auto-demo eligibility.
+**Auto-demo now loads on every visit, not just the first.** Previous logic set a flag on the first auto-demo and never showed it again. That meant visitors with cleared inventory still saw an empty state on repeat visits. New rule: auto-demo every load when there's no inventory data and no user, *unless* the visitor explicitly clicked "Exit demo" once. The new `theLedger.demoDismissed.v1` flag tracks only that deliberate dismissal; sign-in-driven exits (e.g. Firebase session restoring) don't write the flag, so signing out later restores auto-demo eligibility.
 
-### v0.9.4 — Interactive stat cards + per-animal demo silhouettes (2026-05-16)
+### v0.9.4: Interactive stat cards + per-animal demo silhouettes (2026-05-16)
 
-**Stat cards are now clickable filters.** Clicking the **Items / Active / Sold** cards in the header filters the grid to that subset. The active card gets a teal background, accent-colored text, and a glowing bottom border. Clicking the same card again clears the filter and goes back to all items. Est. Value stays display-only (it's a summary number, not a meaningful filter pivot). Renders as native `<button>` elements with keyboard focus support — tab through the cards and press enter to filter.
+**Stat cards are now clickable filters.** Clicking the **Items / Active / Sold** cards in the header filters the grid to that subset. The active card gets a teal background, accent-colored text, and a glowing bottom border. Clicking the same card again clears the filter and goes back to all items. Est. Value stays display-only (it's a summary number, not a meaningful filter pivot). Renders as native `<button>` elements with keyboard focus support: tab through the cards and press enter to filter.
 
 Active = `Ready to List / Listed-Poshmark / Listed-eBay / Listed-Both` (matches the existing stat-count formula; drafts don't count as "active" since they're not listed yet). Sold = `Sold / Shipped`.
 
 **Per-animal silhouettes in demo photos.** demo-data.js now has a small `_ICONS` library with distinct SVG silhouettes for **bear, elephant, dinosaur, spider, lizard, donkey, shirt**. Demo items pick the matching kind: Peanut Royal Blue gets the elephant, Rex gets the T-Rex profile, Iggy gets the iguana, Spinner gets the eight-legged spider, Lefty gets the donkey (long ears), and the Levi's jacket gets the shirt. The rest fall back to the bear silhouette. Still ~700 B per photo as inline data URLs, just visually distinct now.
 
-### v0.9.3 — Version in window title (2026-05-16)
+### v0.9.3: Version in window title (2026-05-16)
 
-The `<title>` tag now includes the semver — `The Ledger v0.9.3 — Collectibles Inventory`. Visible in the browser tab, in bookmarks, and on the OS task switcher. The static title in `index.html` carries a sensible hardcoded value (for SEO + social shares + pre-JS render); `init()` then rewrites `document.title` from `APP_VERSION` on load, so the single source of truth still wins and anyone forgetting to bump the static value gets it overwritten anyway.
+The `<title>` tag now includes the semver (`The Ledger v0.9.3`, followed by the app name). Visible in the browser tab, in bookmarks, and on the OS task switcher. The static title in `index.html` carries a sensible hardcoded value (for SEO + social shares + pre-JS render); `init()` then rewrites `document.title` from `APP_VERSION` on load, so the single source of truth still wins and anyone forgetting to bump the static value gets it overwritten anyway.
 
-### v0.9.2 — Auto-demo on first visit + per-item photos (2026-05-16)
+### v0.9.2: Auto-demo on first visit + per-item photos (2026-05-16)
 
 Two demo-mode upgrades that fix the conversion gap: first-time visitors with no localStorage data now drop straight into the populated demo instead of an empty state, and every demo item now carries a procedurally-generated SVG "photo" so the photo feature is visible from the moment the page paints.
 
-**Auto-demo on true first visit.** On page load, if both `theLedger.inventory.v1` and `theLedger.demoShown.v1` are absent from localStorage and no `?demo=0` opt-out is in the URL, demo mode auto-enters and the `demoShown` flag is set so future visits don't re-trigger it. Returning users — even those who exited demo and never added an item — never see auto-demo again. Footer "Try the demo" link and `?demo=1` URL param still work for manual entry without touching the flag.
+**Auto-demo on true first visit.** On page load, if both `theLedger.inventory.v1` and `theLedger.demoShown.v1` are absent from localStorage and no `?demo=0` opt-out is in the URL, demo mode auto-enters and the `demoShown` flag is set so future visits don't re-trigger it. Returning users (even those who exited demo and never added an item) never see auto-demo again. Footer "Try the demo" link and `?demo=1` URL param still work for manual entry without touching the flag.
 
 **Auto-exit demo on session restore.** If Firebase Auth restores a session for a returning signed-in user after auto-demo has already fired, `onCloudAuthChanged` now silently exits demo mode (drops the banner, clears the body class, strips `?demo=` from the URL) *before* subscribing to Firestore, so the visitor doesn't see demo content flash over their real inventory.
 
-**Per-item SVG photos.** demo-data.js now defines a `_demoPhoto(label, hue, kind)` helper that produces a procedural gradient card (~700 B encoded) with a bear or shirt silhouette + the item name overlaid. Each of the 12 demo items references it with a hue that maps to the item's color family (purple Princess, royal-blue Peanut, magenta Patti, holiday-red Teddy, denim-blue Levi's jacket as a shirt icon, etc.). Inline data URLs — no extra fetches, no copyright concerns, no localStorage bloat since demo data is in-memory only.
+**Per-item SVG photos.** demo-data.js now defines a `_demoPhoto(label, hue, kind)` helper that produces a procedural gradient card (~700 B encoded) with a bear or shirt silhouette + the item name overlaid. Each of the 12 demo items references it with a hue that maps to the item's color family (purple Princess, royal-blue Peanut, magenta Patti, holiday-red Teddy, denim-blue Levi's jacket as a shirt icon, etc.). Inline data URLs: no extra fetches, no copyright concerns, no localStorage bloat since demo data is in-memory only.
 
-### v0.9.1 — Footer "Try the demo" link (2026-05-15)
+### v0.9.1: Footer "Try the demo" link (2026-05-15)
 
 Adds a teal "Try the demo" link to the site footer between "Export often" and the version chip. Real `<a href="?demo=1">` so right-click → copy link gives a shareable demo URL; left-click intercepts and triggers demo mode in place (no page reload, history.replaceState updates the URL). Honors modifier keys for open-in-new-tab. Signed-in users still see the existing toast guard if they click.
 
-Previously the only entry point was the "See it with sample data" button on the empty state — power users with real data never saw it.
+Previously the only entry point was the "See it with sample data" button on the empty state, so power users with real data never saw it.
 
-### v0.9.0 — PWA install + dev.rizzo.cc/inventory mirror (2026-05-08)
+### v0.9.0: PWA install + dev.rizzo.cc/inventory mirror (2026-05-08)
 
 Two structural changes that don't add features but change where and how the app lives.
 
 **Progressive Web App install.** Adds a `site.webmanifest` with name, theme color matching `--bg-0`, standalone display mode, and three new icons rendered by `.scripts/build-og-image.py`: a 192×192 standard icon, a 512×512 standard icon, and a 512×512 maskable icon with safe-zone padding so Android's adaptive crop doesn't clip the bear. With manifest + HTTPS + apple-touch-icon all in place, Chrome will show an install prompt and iOS / Android will install with the bear logo on the home screen.
 
-**Secondary deployment at dev.rizzo.cc/inventory.** A new `.github/workflows/mirror-to-dev.yml` workflow runs on every push to main: it checks out this repo and the target `yada-yoda/dev` repo, rsyncs the static files into `dst/inventory/` (excluding `.git`, `.github`, `README.md`, `firestore.rules`, `storage.rules`, `.scripts/`), then runs five sed passes to rewrite any identity references — full-URL, bare hostname, `github.io` → `rizzo.cc`, plus account-name scrubs that swap `itsavibecode` → `primary` and `yada-yoda` → `secondary` so descriptive prose in source comments can't leak the cross-account relationship either. Commits go to the target repo as `github-actions[bot]` with a generic "Update /inventory" message.
+**Secondary deployment at dev.rizzo.cc/inventory.** A new `.github/workflows/mirror-to-dev.yml` workflow runs on every push to main: it checks out this repo and the target `yada-yoda/dev` repo, rsyncs the static files into `dst/inventory/` (excluding `.git`, `.github`, `README.md`, `firestore.rules`, `storage.rules`, `.scripts/`), then runs five sed passes to rewrite any identity references: full-URL, bare hostname, `github.io` → `rizzo.cc`, plus account-name scrubs that swap `itsavibecode` → `primary` and `yada-yoda` → `secondary` so descriptive prose in source comments can't leak the cross-account relationship either. Commits go to the target repo as `github-actions[bot]` with a generic "Update /inventory" message.
 
-**Canonical URL is now `dev.rizzo.cc/inventory/`.** The `<link rel="canonical">`, every `og:*`, and every `twitter:*` URL/image meta tag points there. The og-image footer URL line was changed at the source-rendering level to read `dev.rizzo.cc/inventory`. The original `itsavibecode.github.io/inven/` URL still serves the same content as a secondary host — same Firebase project, same data — but search engines and social shares will route to the dev.rizzo.cc domain.
+**Canonical URL is now `dev.rizzo.cc/inventory/`.** The `<link rel="canonical">`, every `og:*`, and every `twitter:*` URL/image meta tag points there. The og-image footer URL line was changed at the source-rendering level to read `dev.rizzo.cc/inventory`. The original `itsavibecode.github.io/inven/` URL still serves the same content as a secondary host (same Firebase project, same data), but search engines and social shares will route to the dev.rizzo.cc domain.
 
 Requires `MIRROR_TO_DEV_PAT` repo secret (already configured) and `dev.rizzo.cc` added to Firebase Auth's authorized domains (already done) so sign-in popups work from the mirror.
 
-### v0.8.2 — Firebase lazy-init perf pass (2026-05-08)
+### v0.8.2: Firebase lazy-init perf pass (2026-05-08)
 
 v0.8.1's font + script-defer pass moved local Lighthouse from 83 → 86. PSI on the live URL was still flagging 190 KiB of unused JavaScript, almost entirely the Firestore + Storage SDK modules pulled eagerly even though most visitors (demo browsers, guests, page-load shoppers) never touch the cloud at all.
 
 Three structural changes in `firebase-config.js`:
 
 1. **Auth init runs in `requestIdleCallback`** (1.5s timeout fallback). The page paints with the guest auth bar before any Firebase code runs.
-2. **Firestore and Storage modules are now dynamic-imported on first use** — `ensureFirestore()` / `ensureStorage()` cache the module reference and the initialized handle, so every subsequent call is instant. Demo Mode and guest-mode visitors never trigger the imports at all.
-3. **API surface stays the same.** `window.firestoreApi.saveItem(...)`, `subscribeItems(...)`, `firebaseStorageApi.uploadPhoto(...)`, etc. all behave identically to v0.8.1 — every method now awaits its module under the hood. `subscribeItems` and `subscribeBeanies` still return a *synchronous* unsubscribe function (a lazy wrapper that short-circuits if cancelled before the listener attaches), so existing app.js cleanup code doesn't change.
+2. **Firestore and Storage modules are now dynamic-imported on first use**: `ensureFirestore()` / `ensureStorage()` cache the module reference and the initialized handle, so every subsequent call is instant. Demo Mode and guest-mode visitors never trigger the imports at all.
+3. **API surface stays the same.** `window.firestoreApi.saveItem(...)`, `subscribeItems(...)`, `firebaseStorageApi.uploadPhoto(...)`, etc. all behave identically to v0.8.1; every method now awaits its module under the hood. `subscribeItems` and `subscribeBeanies` still return a *synchronous* unsubscribe function (a lazy wrapper that short-circuits if cancelled before the listener attaches), so existing app.js cleanup code doesn't change.
 
 Pattern is the same one the `sick` project used to hit PSI mobile 99 / desktop 100. Expected lift here: 86 → 95+ on mobile, FCP under 2s, the "unused JS" diagnostic should drop to near-zero for first-load visitors.
 
-### v0.8.1 — PageSpeed perf pass (2026-05-03)
+### v0.8.1: PageSpeed perf pass (2026-05-03)
 
 Lighthouse mobile audit on the v0.8.0 live URL came back at 83/100 with FCP at 3.2s and LCP at 3.7s. Diagnostics flagged the Google Fonts stylesheet and the post-firebase scripts as the critical-request chain blocking first paint.
 
 Three fixes:
 
 1. **Font CSS now loads non-blocking** via the `media="print" onload="this.media='all'"` swap pattern, with a `<noscript>` fallback for visitors with JS disabled. Stops the Google Fonts stylesheet from blocking first paint.
-2. **Trimmed font weights** from Geist 300/400/500/600/700 + Mono 400/500/600 down to 400/500/600/700 + Mono 400/500 — only what styles.css actually uses. Smaller font payload, fewer subset fetches.
+2. **Trimmed font weights** from Geist 300/400/500/600/700 + Mono 400/500/600 down to 400/500/600/700 + Mono 400/500, only what styles.css actually uses. Smaller font payload, fewer subset fetches.
 3. **Added `defer`** to `beanie-db.js`, `demo-data.js`, and `app.js` so they parse-time async. `firebase-config.js` is `type="module"` (already implicitly deferred).
 
-Skipping the Firebase SDK lazy-import refactor for now — Lighthouse's "unused JavaScript" is mostly the Firestore + Storage modules, which gstatic caches aggressively across sessions and which we genuinely use the moment a returning user signs in. Bigger surgery, smaller real-world payoff. Queued as a stretch if it ever bites in practice.
+Skipping the Firebase SDK lazy-import refactor for now. Lighthouse's "unused JavaScript" is mostly the Firestore + Storage modules, which gstatic caches aggressively across sessions and which we genuinely use the moment a returning user signs in. Bigger surgery, smaller real-world payoff. Queued as a stretch if it ever bites in practice.
 
 Adds a small `summarize-lh.py` helper in `.scripts/` for parsing Lighthouse JSON output during future perf passes.
 
-### v0.8.0 — Cost / fee tracking and per-item Profit & Loss (2026-05-03)
+### v0.8.0: Cost / fee tracking and per-item Profit & Loss (2026-05-03)
 
 A whole new dimension to each item: where the money actually goes between the buy and the bank deposit.
 
 **New fields added to each item:**
-- *Listing & Pricing tab:* Item Tax (sales tax paid when buying), Other Expenses (supplies, gas — with a freeform notes box), Poshmark Order Number.
+- *Listing & Pricing tab:* Item Tax (sales tax paid when buying), Other Expenses (supplies, gas, with a freeform notes box), Poshmark Order Number.
 - *Shipping tab:* the existing Est. Shipping Cost is renamed Postage Charged to Buyer (revenue-side). A new Actual Postage Paid field captures what the shipping label really cost (cost-side).
 - *New Fees & Profit tab:* per-platform fee fields covering eBay Insertion / FVF / FVF on shipping / per-order fixed; Poshmark selling fee; PayPal transaction fee; and an Other fee field with a notes box for promoted listings, authentication fees, etc.
 
@@ -347,51 +399,51 @@ A whole new dimension to each item: where the money actually goes between the bu
 
 **Live Profit & Loss summary** at the bottom of the new tab. Shows revenue (sold price + postage charged), minus cost basis (cost + tax + supplies + actual postage paid), minus fees, equals net profit. Color-coded green/red. While an item is unsold the summary projects from the listing price; once sold it reflects actuals. A small "% over cost basis" line gives the margin at a glance.
 
-**Days metrics.** When the item has a Listed date, a Days Active counter shows up. When it sells, the counter pivots to "Days from listed to sold" with a qualitative tag — Quick flip / Normal turnover / Slow mover / Long tail.
+**Days metrics.** When the item has a Listed date, a Days Active counter shows up. When it sells, the counter pivots to "Days from listed to sold" with a qualitative tag: Quick flip / Normal turnover / Slow mover / Long tail.
 
-**Tooltips everywhere.** Small `?` badges next to each new field — hover to see what the field is for (e.g. on the eBay FVF field: "Typically ~13.25% of the item sale price for most categories. eBay deducts this automatically."). Same for the cost-basis fields, postage fields, every fee field, and Sold Price.
+**Tooltips everywhere.** Small `?` badges next to each new field; hover to see what the field is for (e.g. on the eBay FVF field: "Typically ~13.25% of the item sale price for most categories. eBay deducts this automatically."). Same for the cost-basis fields, postage fields, every fee field, and Sold Price.
 
 **Demo data updated.** The three already-sold demo items (Patti, Glory, Lefty) now have full cost/fee/postage data filled in, so the P&L panel renders meaningfully out of the box. Patti shows a Poshmark sale, Glory and Lefty show eBay sales with the FVF + per-order breakdown.
 
-### v0.7.0 — Demo Mode for first-time visitors (2026-04-30)
+### v0.7.0: Demo Mode for first-time visitors (2026-04-30)
 
-Adds a "See it with sample data" button to the empty state, and a thin demo banner at the top of the page when active. Loads 12 realistic sample items in memory only — varied categories (Beanies plus a vintage Levi's jacket), varied statuses (Draft / Ready to List / Listed-Both / Listed-eBay / Listed-Poshmark / Sold), varied price tiers (a $18 common Iggy through a $1,200 Royal Blue Peanut), and a few entries with full Pricing Research filled in so the suggested-price + margin panel renders meaningfully.
+Adds a "See it with sample data" button to the empty state, and a thin demo banner at the top of the page when active. Loads 12 realistic sample items in memory only: varied categories (Beanies plus a vintage Levi's jacket), varied statuses (Draft / Ready to List / Listed-Both / Listed-eBay / Listed-Poshmark / Sold), varied price tiers (a $18 common Iggy through a $1,200 Royal Blue Peanut), and a few entries with full Pricing Research filled in so the suggested-price + margin panel renders meaningfully.
 
-`saveState()` short-circuits when `state.demoMode` is on, so demo edits / additions / deletions never touch localStorage or Firestore. Sign-in auto-exits demo mode if a visitor decides to convert. There's also a `?demo=1` URL parameter — shareable link straight into the populated demo.
+`saveState()` short-circuits when `state.demoMode` is on, so demo edits / additions / deletions never touch localStorage or Firestore. Sign-in auto-exits demo mode if a visitor decides to convert. There's also a `?demo=1` URL parameter, a shareable link straight into the populated demo.
 
 The intent is conversion: a brand-new visitor on the live URL sees a button, clicks it, sees the app full of plausible inventory in one second, and gets the feel of the tool before having to sign in or hand-add anything.
 
-### v0.6.0 — Beanie reference DB expanded from 60 → 124 entries (2026-04-30)
+### v0.6.0: Beanie reference DB expanded from 60 to 124 entries (2026-04-30)
 
 Hand-curated expansion of `beanie-db.js`, adding 66 entries on top of the original 60-entry seed. Coverage now includes the full set of holiday teddies (1998/1999/2000), the value-tier 1995 dinosaur trio (Rex / Steg / Bronty), the 1996 political bears (Lefty / Righty), the Mexican exclusive Osito, the USA-flag Libearty (with the intentional spelling), most popular dogs (Bones / Bruno / Doby / Fetch / Pugsly / Rover / Tracker / Wrinkles), the Iggy/Rainbow material-mix-up pair, the 1995-era Tank/Coral/Sting/Bubbles/Manny early-retirees, and a dozen other commonly-traded Beanies.
 
-Each new entry has accurate name, year, birthday, style #, and retirement date, plus collector notes on value-affecting variations where they exist. Tag poems are intentionally left blank on the new entries — your physical heart tag is the canonical source for that copy, and pre-filling them risks copyright exposure on a public repo.
+Each new entry has accurate name, year, birthday, style #, and retirement date, plus collector notes on value-affecting variations where they exist. Tag poems are intentionally left blank on the new entries: your physical heart tag is the canonical source for that copy, and pre-filling them risks copyright exposure on a public repo.
 
-This was originally scoped as a Beaniepedia scrape but the data on that site is in flowing prose rather than structured tables, URL slugs collide with newer Disney-character Beanies (the Bluey "Bingo" overrides the original 1990s spotted dog), and reproducing their editorial content on a public repo is a legitimate copyright concern. Hand-curated expansion is faster, cleaner, and matches the style of the original seed entries — the long tail of obscure Beanies stays handled by the existing "Save to DB" button.
+This was originally scoped as a Beaniepedia scrape but the data on that site is in flowing prose rather than structured tables, URL slugs collide with newer Disney-character Beanies (the Bluey "Bingo" overrides the original 1990s spotted dog), and reproducing their editorial content on a public repo is a legitimate copyright concern. Hand-curated expansion is faster, cleaner, and matches the style of the original seed entries. The long tail of obscure Beanies stays handled by the existing "Save to DB" button.
 
-### v0.5.0 — Pricing Research tab with margin estimate (2026-04-30)
+### v0.5.0: Pricing Research tab with margin estimate (2026-04-30)
 
-A new "Research" tab in the item editor for recording what comparable items have actually sold for. Three platform sections side by side — eBay sold avg, Poshmark sold avg, Price Guide — each with a numeric value, a date stamp, and a free-text source/notes field. Anything older than 30 days picks up a small "stale" badge so it's obvious when to re-check.
+A new "Research" tab in the item editor for recording what comparable items have actually sold for. Three platform sections side by side (eBay sold avg, Poshmark sold avg, Price Guide), each with a numeric value, a date stamp, and a free-text source/notes field. Anything older than 30 days picks up a small "stale" badge so it's obvious when to re-check.
 
 A live "Suggested listing price" panel below averages whatever you've filled in (just the platforms with a price > 0), and a one-click "Use as listing price" button copies that average into the Listing & Pricing tab's price field. Below that, a margin estimate panel shows the rough net after typical fees: ~80% of asking on Poshmark (20% fee on sales ≥ $15, $2.95 flat below), ~87% on eBay (13% final value fee + small payment-processing flat). If a cost is set, both blocks also show profit-or-loss vs. cost in green or red. Numbers update live as you type.
 
-Auto-fetch from Poshmark and price-guide sites isn't shipping — Poshmark has no public API and most guide sites forbid scraping. The eBay Browse API is legitimately doable but requires OAuth and a CORS proxy worker (same pattern as the stocks-worker), which is queued for a separate v0.5.1 stretch. For now everything is manual entry, and the workflow is good enough to start anchoring real listing decisions on it.
+Auto-fetch from Poshmark and price-guide sites isn't shipping: Poshmark has no public API and most guide sites forbid scraping. The eBay Browse API is legitimately doable but requires OAuth and a CORS proxy worker (same pattern as the stocks-worker), which is queued for a separate v0.5.1 stretch. For now everything is manual entry, and the workflow is good enough to start anchoring real listing decisions on it.
 
-### v0.4.1 — Social-share meta tags, OG image, apple-touch-icon (2026-04-29)
+### v0.4.1: Social-share meta tags, OG image, apple-touch-icon (2026-04-29)
 
 Pasting the live URL into iMessage / Discord / Slack / Twitter / Bluesky now produces a proper link preview instead of a barebones URL. Adds a 1200×630 og-image.png with the bear plush logo and brand on a charcoal/teal panel matching the site, plus a 180×180 apple-touch-icon.png for iOS home-screen pins. Wires the full set of `og:*` and `twitter:*` meta tags (type, url, title, description, image with alt text and dimensions, summary_large_image card), a canonical URL, theme-color matching `--bg-0`, and an apple-touch-icon link.
 
 The OG image is generated from a Python script committed at `.scripts/build-og-image.py` (Pillow + system Inter/Arial Black fonts), mirroring the pattern used in the spacex repo. Re-run the script and bump version on any future brand-affecting change.
 
-### v0.4.0 — Barcode scanner now works on iOS Safari and Firefox (2026-04-29)
+### v0.4.0: Barcode scanner now works on iOS Safari and Firefox (2026-04-29)
 
-The native `BarcodeDetector` API is Chromium-only — iOS Safari, iOS Chrome (which is also WebKit), and Firefox all lacked it, so the scanner opened on those browsers and immediately bailed with "Try Chrome or Edge on mobile." Now `openScanner` checks for native support, and if it's missing, dynamically imports the WASM-backed `barcode-detector` polyfill (sec-ant/barcode-detector v2) from jsDelivr. The polyfill patches `globalThis.BarcodeDetector` so the existing detection loop keeps using `new BarcodeDetector()` unchanged. The import is a one-shot promise cached for re-opens, never fired on browsers with native support, so non-Safari users don't pay the ~280 KB load.
+The native `BarcodeDetector` API is Chromium-only. iOS Safari, iOS Chrome (which is also WebKit), and Firefox all lacked it, so the scanner opened on those browsers and immediately bailed with "Try Chrome or Edge on mobile." Now `openScanner` checks for native support, and if it's missing, dynamically imports the WASM-backed `barcode-detector` polyfill (sec-ant/barcode-detector v2) from jsDelivr. The polyfill patches `globalThis.BarcodeDetector` so the existing detection loop keeps using `new BarcodeDetector()` unchanged. The import is a one-shot promise cached for re-opens, never fired on browsers with native support, so non-Safari users don't pay the ~280 KB load.
 
 The scanner UI now shows "Loading scanner for this browser…" while the polyfill resolves, then transitions to the regular "Starting camera…" / "Position the barcode in the frame…" copy. If both native and polyfill fail, the message degrades to "Barcode scanning is not available here" with a hint that manual UPC entry still works.
 
-Updates the README's browser-support section accordingly. Camera access still requires HTTPS — the live GitHub Pages URL covers this; `file://` opens still won't get camera permission.
+Updates the README's browser-support section accordingly. Camera access still requires HTTPS. The live GitHub Pages URL covers this; `file://` opens still won't get camera permission.
 
-### v0.3.0 — Variation flag, per-platform descriptions, eBay item # (2026-04-28)
+### v0.3.0: Variation flag, per-platform descriptions, eBay item # (2026-04-28)
 
 Three schema additions tracked from the original 2026-04-19 design notes.
 
@@ -399,28 +451,28 @@ A `has_variations` checkbox in the Basics tab marks items where each example dif
 
 The single Listing Description has split into three: a shared one (the existing default, used when nothing platform-specific is set) plus optional eBay-only and Poshmark-only overrides. eBay tends to want detailed, condition-focused copy; Poshmark tends to want shorter, hashtag-friendly copy. The Poshmark TXT export uses the Poshmark override; the eBay File Exchange CSV uses the eBay override; both fall back to the shared description when their override is empty, so existing items keep working without migration.
 
-Adds an explicit `ebay_item_number` field next to the eBay listing URL — useful when the URL alone isn't enough to find the listing in Seller Hub.
+Adds an explicit `ebay_item_number` field next to the eBay listing URL, useful when the URL alone isn't enough to find the listing in Seller Hub.
 
 The form save now correctly handles checkboxes (the checked state, not the `value` attribute), and openEditor populates checkboxes via `.checked` rather than `.value`. Existing items missing the new fields fall through to default empty/false values without any explicit migration.
 
-### v0.2.1 — Sign-in UI and Beanie DB autofill fixes (2026-04-28)
+### v0.2.1: Sign-in UI and Beanie DB autofill fixes (2026-04-28)
 
-Two small bugs surfaced on first real sign-in test in v0.2.0. The "Sign in with Google" button stayed visible alongside the signed-in pill because `.btn-link`'s `display: inline-flex` was beating the user-agent `[hidden] { display: none }` rule — added an explicit `.btn-link[hidden] { display: none; }` so `signInBtn.hidden = true` actually hides it. Clicking a Beanie DB suggestion didn't replace the partial name the user had typed to trigger the suggest in the first place — `setIfEmpty('name', entry.name)` was a no-op because the field wasn't empty. The name is now always replaced with the canonical DB entry name (other fields keep the setIfEmpty behavior so the user's manual entries aren't clobbered).
+Two small bugs surfaced on first real sign-in test in v0.2.0. The "Sign in with Google" button stayed visible alongside the signed-in pill because `.btn-link`'s `display: inline-flex` was beating the user-agent `[hidden] { display: none }` rule, so an explicit `.btn-link[hidden] { display: none; }` now makes `signInBtn.hidden = true` actually hide it. Clicking a Beanie DB suggestion didn't replace the partial name the user had typed to trigger the suggest in the first place: `setIfEmpty('name', entry.name)` was a no-op because the field wasn't empty. The name is now always replaced with the canonical DB entry name (other fields keep the setIfEmpty behavior so the user's manual entries aren't clobbered).
 
-### v0.2.0 — Google sign-in and multi-device sync (2026-04-28)
+### v0.2.0: Google sign-in and multi-device sync (2026-04-28)
 
-Adds optional Google sign-in. When signed in, all inventory items and any custom Beanie DB entries sync to Cloud Firestore in real time, and photos sync to Firebase Storage — open the app on a phone, laptop, or tablet, and your collection follows you. A slim auth bar above the header shows the current state and exposes the sign-in/out controls. Guest mode is unchanged: data stays in localStorage and nothing is sent off-device, so you can still use the app without an account.
+Adds optional Google sign-in. When signed in, all inventory items and any custom Beanie DB entries sync to Cloud Firestore in real time, and photos sync to Firebase Storage. Open the app on a phone, laptop, or tablet, and your collection follows you. A slim auth bar above the header shows the current state and exposes the sign-in/out controls. Guest mode is unchanged: data stays in localStorage and nothing is sent off-device, so you can still use the app without an account.
 
 The first time you sign in on a device with existing guest-mode items, the app counts the items and Beanie DB entries that aren't already in your account and prompts to upload them in one click. Your local copy stays as a backup either way. The prompt only fires once per sign-in.
 
-To set up sync the first time, paste `firestore.rules` and `storage.rules` (committed at the repo root) into the Firebase console — Firestore Database → Rules and Storage → Rules respectively. Both lock each user to their own `/users/{uid}/...` subtree, deny anonymous access, and have no fallthrough rule, so anything outside that namespace is implicitly denied. Storage uploads are constrained to image/* and capped at 8 MiB to keep accidental large uploads from chewing through the free tier.
+To set up sync the first time, paste `firestore.rules` and `storage.rules` (committed at the repo root) into the Firebase console: Firestore Database → Rules and Storage → Rules respectively. Both lock each user to their own `/users/{uid}/...` subtree, deny anonymous access, and have no fallthrough rule, so anything outside that namespace is implicitly denied. Storage uploads are constrained to image/* and capped at 8 MiB to keep accidental large uploads from chewing through the free tier.
 
 Photos taken in guest mode stay device-local in localStorage until you sign in and migrate; once uploaded to Storage, the app stores download URLs in the Firestore doc rather than base64 (URLs are tiny and stay well under the 1 MiB document cap regardless of photo count). Item delete fans out a best-effort cleanup of the matching Storage folder so orphan blobs don't pile up.
 
 Adds cache-busting `?v=` query strings to all local script tags in `index.html`. Bump them alongside `APP_VERSION` on each release that ships JS changes, so users on a stale browser cache get the new files.
 
-Known limits: photo sync requires Firebase's Blaze (pay-as-you-go) plan, but the free tier (5 GB storage, 1 GB/day download) covers a personal inventory at this scale with no charge in expected use; set a $1 budget alert in the Firebase console for peace of mind. iPhone Safari/Chrome still can't run the native barcode scanner — that's a known issue tracked for a later release with a JS fallback library.
+Known limits: photo sync requires Firebase's Blaze (pay-as-you-go) plan, but the free tier (5 GB storage, 1 GB/day download) covers a personal inventory at this scale with no charge in expected use; set a $1 budget alert in the Firebase console for peace of mind. iPhone Safari/Chrome still can't run the native barcode scanner; that's a known issue tracked for a later release with a JS fallback library.
 
-### v0.1.0 — Initial baseline (2026-04-27)
+### v0.1.0: Initial baseline (2026-04-27)
 
-First tagged release. Captures the state of the app as originally built and uploaded via the GitHub web UI on 2026-04-19. No behavior changes from that upload — this release just adds a visible version number in the site footer (`v0.1.0`), an `APP_VERSION` constant in `app.js` as the single source of truth, and this Changelog section. Intended as the clean starting point before adding multi-device sync, an iPhone barcode-scanner fallback, an expanded Beanie reference database, and other features tracked in future releases.
+First tagged release. Captures the state of the app as originally built and uploaded via the GitHub web UI on 2026-04-19. No behavior changes from that upload. This release just adds a visible version number in the site footer (`v0.1.0`), an `APP_VERSION` constant in `app.js` as the single source of truth, and this Changelog section. Intended as the clean starting point before adding multi-device sync, an iPhone barcode-scanner fallback, an expanded Beanie reference database, and other features tracked in future releases.
