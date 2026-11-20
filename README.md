@@ -4,19 +4,19 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v1.3.1**. See the [Changelog](#changelog) at the bottom for release history.
+Current version: **v1.3.2**. See the [Changelog](#changelog) at the bottom for release history.
 
 ---
 
 ## What's new in this version
 
-v1.3.1 makes Find missing photos reach the items it was missing.
+v1.3.2 makes Find missing photos pick better matches.
 
-- **Dead links fall back to your closet.** An item with an old eBay number whose listing is long gone used to be skipped. Now, if a link gives no photos, the item is tried against your Poshmark closet by title, the same way items with no link are. Items that already have a Poshmark link and still fail are skipped, because they were matched before.
-- **Clearer counts and wording.** The window starts with "X linked, Y without a link" and says how many fell through to the closet. If no closet username is set, the message names the exact place to add it (Settings, Photos). In demo mode the button is off and says to exit demo and sign in.
-- **True 44 px buttons.** The Save, Cancel, and Done buttons at the bottom of every window are exactly 44 px tall on phones.
+- **Smarter title matching.** Common words (new, exclusive, socks, shirt, pin, loot crate, sizes, dates, anything in parentheses) no longer count toward a match. Only the words that say which item it is do. "Fight Club Socks" now finds "Fight Club Project Mayhem Socks" instead of any other pair of socks, and titles that share no distinctive word never match.
+- **Two choices per review.** When a match needs your call, the window shows the two best closet listings, each with its picture, score, and its own Accept button, plus Skip. The row clears the moment you click, so it cannot be double-clicked.
+- **Shared listings are visible.** If the closet listing is already linked to another item, the row says so and never links on its own. Two units of one listing are fine, but you now see it and confirm it.
 
-The release before that was about Poshmark, where most listings live:
+Before that: dead eBay links fall back to your closet, with clearer counts and true 44 px footer buttons on phones. And before that, a release about Poshmark, where most listings live:
 
 - **Import from a Poshmark link.** The Add Item card now takes an eBay or a Poshmark listing link. Paste it and the title, price, condition, size, brand, color, description, listing date, and photos land in the form. If the seller left the real condition ("NWOT", "never worn") in the description while the listing just says Used, it is read from there. The category is picked from Poshmark's own category path.
 - **Mark sold.** Every card and table row that is not yet sold has a **Mark sold** button. One small window asks for the platform, sold price, date, and buyer, fills the standard fees, and the ship-by reminder appears right away. No editor, no tabs.
@@ -197,6 +197,15 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v1.3.2: Better photo matches, two choices, visible duplicates (2026-11-20)
+
+Two real runs of Find missing photos on the owner's inventory showed the matcher leaning on the wrong words. "Fight Club Socks" was offered "Captain America Socks" because both say "Exclusive", "NEW", and "Socks". Five different sock items were each offered "Deadpool Socks". A Buffy bookmark was offered a Dracula pin on the strength of "Loot Crate".
+
+- **Scoring.** Parenthetical tails, dates, months, years, and generic words (new, exclusive, nwt, sealed, socks, shirt, tee, pin, figure, mini, vinyl, funko, loot crate, geek fuel, sizes) are removed before scoring. The score is shared distinctive words over the distinctive words in the shorter title, and no shared distinctive word means no match. Ties go to the candidate with more shared words, then the shorter title.
+- **Auto-link rule.** Still a score of 75% or more, a clear best, and at least two shared distinctive words. One shared word is enough when it is 7 or more letters long and no other closet title contains it, so a name like "Battletoads" links on its own.
+- **Review row.** Shows the top two candidates with picture, score, and a separate Accept each, plus Skip and Skip all remaining. The row disappears as soon as you click.
+- **Duplicates.** A listing already linked to another item shows "Already linked to <item>" and always needs an explicit Accept.
 
 ### v1.3.1: Find missing photos reaches dead links (2026-11-20)
 
