@@ -4,13 +4,19 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v1.3.0**. See the [Changelog](#changelog) at the bottom for release history.
+Current version: **v1.3.1**. See the [Changelog](#changelog) at the bottom for release history.
 
 ---
 
 ## What's new in this version
 
-v1.3.0 is about Poshmark, where most listings live.
+v1.3.1 makes Find missing photos reach the items it was missing.
+
+- **Dead links fall back to your closet.** An item with an old eBay number whose listing is long gone used to be skipped. Now, if a link gives no photos, the item is tried against your Poshmark closet by title, the same way items with no link are. Items that already have a Poshmark link and still fail are skipped, because they were matched before.
+- **Clearer counts and wording.** The window starts with "X linked, Y without a link" and says how many fell through to the closet. If no closet username is set, the message names the exact place to add it (Settings, Photos). In demo mode the button is off and says to exit demo and sign in.
+- **True 44 px buttons.** The Save, Cancel, and Done buttons at the bottom of every window are exactly 44 px tall on phones.
+
+The release before that was about Poshmark, where most listings live:
 
 - **Import from a Poshmark link.** The Add Item card now takes an eBay or a Poshmark listing link. Paste it and the title, price, condition, size, brand, color, description, listing date, and photos land in the form. If the seller left the real condition ("NWOT", "never worn") in the description while the listing just says Used, it is read from there. The category is picked from Poshmark's own category path.
 - **Mark sold.** Every card and table row that is not yet sold has a **Mark sold** button. One small window asks for the platform, sold price, date, and buyer, fills the standard fees, and the ship-by reminder appears right away. No editor, no tabs.
@@ -72,7 +78,7 @@ The [Changelog](#changelog) has the full story of each release.
 - Drag-and-drop photo uploads
 - Auto-downscaling to keep browser storage manageable
 - UPC lookup can auto-add a product image when available
-- **Find missing photos** (Settings, Photos): fills items that have no pictures from their eBay or Poshmark listing, or by matching their title against your Poshmark closet. Safe to run again: items that now have photos are skipped
+- **Find missing photos** (Settings, Photos): fills items that have no pictures from their eBay or Poshmark listing, or by matching their title against your Poshmark closet (also used when an old link gives no photos). Safe to run again: items that now have photos are skipped
 
 ### Import / Export
 - **JSON backup** (full fidelity, includes custom Beanie DB entries, re-importable)
@@ -191,6 +197,15 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v1.3.1: Find missing photos reaches dead links (2026-11-20)
+
+Running Find missing photos on the real inventory showed a gap. About three quarters of the photo-less items carried an old eBay item number whose listing ended long ago. The lookup said "not found" and the item was skipped, even though most of them are also in the Poshmark closet and would have matched there.
+
+- **Fallback to the closet.** When a linked item's lookup ends with no photos (not found, ended with none, or a service error) and the item has no Poshmark link, it now joins the closet matching step. The log says "no photos from the link, trying the closet". Items that already carry a Poshmark link stay skipped.
+- **Honest counts.** The first screen reads "X linked, Y without a link", and step 3 starts by saying how many fell through to it.
+- **Copy.** With no closet username set, the log says "Add your Poshmark closet username in Settings, Photos". In demo mode the button is switched off with a short reason under it.
+- **Buttons.** Footer buttons on phones were 43 px in places; they are now a true 44 px.
 
 ### v1.3.0: Poshmark import, Mark sold, and missing photos (2026-11-20)
 
