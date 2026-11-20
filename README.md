@@ -4,21 +4,21 @@ A self-hosted inventory manager for Beanie Babies and resale collectibles. Dark 
 
 **Zero dependencies. Runs entirely in the browser. Free to host on GitHub Pages.**
 
-Current version: **v1.2.1**. See the [Changelog](#changelog) at the bottom for release history.
+Current version: **v1.3.0**. See the [Changelog](#changelog) at the bottom for release history.
 
 ---
 
 ## What's new in this version
 
-v1.2.1 is about the part after the sale.
+v1.3.0 is about Poshmark, where most listings live.
 
-- **Buyer field.** Note who bought each item (an eBay username or a Poshmark buyer name) in Listing & Pricing. It helps in a dispute and when a repeat customer comes back. It is searchable and kept in your backups, but never written into the Poshmark or eBay listing exports. eBay Seller Hub imports fill it from the buyer-username column.
-- **Ship-by date.** A sold item with no shipped date shows "Ship by" and a date on its card and in the table: the sold date plus 3 business days, the window Poshmark gives sellers. Once that day has passed it turns coral and says "(late)". Fill in the new Date Shipped field to clear it; switching the status to Shipped fills in today for you.
-- **Poshmark prepaid label.** Poshmark sales ship on a prepaid label the buyer pays for, so Auto-fill standard fees now sets postage charged and postage paid to 0.00 on Poshmark sales (only when those fields are blank).
-- **Easier to read and use.** Stronger text contrast, a visible focus ring for keyboard users, 44 px tap targets on phones, a "No items match these filters" panel with a Clear filters button, and safe-area padding for the iPhone home-screen app.
-- **Photo fix.** If a photo upload to the cloud fails, the photos now stay on the item instead of disappearing from the screen.
+- **Import from a Poshmark link.** The Add Item card now takes an eBay or a Poshmark listing link. Paste it and the title, price, condition, size, brand, color, description, listing date, and photos land in the form. If the seller left the real condition ("NWOT", "never worn") in the description while the listing just says Used, it is read from there. The category is picked from Poshmark's own category path.
+- **Mark sold.** Every card and table row that is not yet sold has a **Mark sold** button. One small window asks for the platform, sold price, date, and buyer, fills the standard fees, and the ship-by reminder appears right away. No editor, no tabs.
+- **Find missing photos.** Items that came over from a spreadsheet have no pictures. Settings now has a Photos section: it pulls photos from each item's listing link, and for items with no link it matches them by title against your Poshmark closet (add your closet username first). Close matches ask you before anything is linked.
+- **Tracking number.** A new field in the Shipping tab, searchable and kept in your exports.
+- **Demo banner fix.** On a narrow phone the banner icon no longer sits alone on its own line.
 
-Also recent, from the previous release: **import a listing from its eBay link**. Paste a listing link or item number into the Add Item form and it pulls in the title, price, condition, item specifics, and photos.
+Also recent, from earlier releases: a Buyer field and a ship-by reminder for sold items, the Poshmark prepaid-label rule in Auto-fill standard fees, and import of a listing from its eBay link.
 
 The [Changelog](#changelog) has the full story of each release.
 
@@ -51,6 +51,7 @@ The [Changelog](#changelog) has the full story of each release.
 - Direct listing URL storage
 - 8 status states: Draft, Ready to List, Listed (Poshmark, eBay, or both), Sold, Shipped, Archived
 - **Buyer** field for the buyer's username or name: private, searchable, never included in listing exports
+- **Mark sold** quick action on every unsold card and row: platform, sold price, date, and buyer in one small window, with standard fees filled in
 
 ### Shipping & packaging
 - Weight (oz/lb/g/kg) and package dimensions (in/cm)
@@ -58,6 +59,7 @@ The [Changelog](#changelog) has the full story of each release.
 - Carrier selection and shipping cost tracking
 - **Ship-by reminder**: a Sold item with no Date Shipped shows "Ship by" and its date (sold date plus 3 business days) on the card and in the table, in coral with "(late)" once overdue. Setting status to Shipped fills Date Shipped with today.
 - **Poshmark prepaid label**: Auto-fill standard fees sets postage charged and postage paid to 0.00 for Poshmark sales (blank fields only), because the buyer pays Poshmark for the label
+- **Tracking number** field (searchable, kept in exports) for the carrier number on the label
 - Inventory number (SKU) to **physically mark on your package**
 
 ### Condition & authenticity
@@ -70,6 +72,7 @@ The [Changelog](#changelog) has the full story of each release.
 - Drag-and-drop photo uploads
 - Auto-downscaling to keep browser storage manageable
 - UPC lookup can auto-add a product image when available
+- **Find missing photos** (Settings, Photos): fills items that have no pictures from their eBay or Poshmark listing, or by matching their title against your Poshmark closet. Safe to run again: items that now have photos are skipped
 
 ### Import / Export
 - **JSON backup** (full fidelity, includes custom Beanie DB entries, re-importable)
@@ -80,7 +83,7 @@ The [Changelog](#changelog) has the full story of each release.
 - Import **JSON, XLSX/XLS, or CSV** with merge or replace modes; the format is auto-detected
 - Import also recognizes an **eBay Seller Hub export** in either CSV or spreadsheet form and maps its columns automatically
 - **Downloadable templates** in both Excel and CSV, with every column plus a filled-in example row
-- **Import a single eBay listing from its link**: paste a live listing URL or item number into the Add Item form and it pulls the title, price, condition, item specifics, and photos (eBay's official Browse API, via a small Cloudflare Worker)
+- **Import a single listing from its link**: paste an eBay or Poshmark listing URL (or an eBay item number) into the Add Item form and it pulls the title, price, condition, item specifics, and photos (eBay's official Browse API and Poshmark's public listing page, via a small Cloudflare Worker)
 
 ### Polished UX
 - Grid and table views
@@ -178,6 +181,7 @@ inven/
 |-- icon-512-maskable.png
 |-- og-image.png          # Social share card (1200x630)
 |-- .scripts/             # Build helpers: OG image, demo photos, Lighthouse summary
+|-- .scripts/sheet-to-ledger.py  # one-time Google Sheet converter, see .scripts/
 |-- .github/workflows/    # mirror-to-dev.yml: mirrors the site to dev.rizzo.cc/inventory
 `-- README.md             # This file
 ```
@@ -187,6 +191,18 @@ No `node_modules`. No build step. Just open and use.
 ---
 
 ## Changelog
+
+### v1.3.0: Poshmark import, Mark sold, and missing photos (2026-11-20)
+
+Most of the listings live on Poshmark, but the app only knew how to read eBay. The items that moved over from the old spreadsheet had no photos at all. And marking something sold meant opening the editor, finding four fields on two tabs, and pressing Auto-fill. This release fixes all three.
+
+- **Poshmark link import.** The import card on Add Item takes a Poshmark listing link as well as an eBay one. It fills the same fields, plus the Poshmark link and the Poshmark description, and steps the status up to Listed - Poshmark (or Listed - Both if it was already on eBay). Poshmark only says "NWT" or "Used", so the first lines of the description are checked too: "NWOT", "brand new", or "never worn" on a Used listing sets the condition to New Without Tags, and the status line says it was read from the description. The category comes from Poshmark's own path (Men, Shirts becomes Clothing, and so on).
+- **Mark sold.** A small button on each unsold card and row opens one window: platform (pre-chosen when the item is only listed on one), sold price (starts at the listing price), date (today), and buyer. Standard fees are filled by default, including the Poshmark prepaid-label postage. If the platform cannot be guessed, the dropdown glows amber until you pick one. The item turns Sold and the ship-by reminder shows right away.
+- **Find missing photos.** Settings has a new Photos section with a Poshmark closet username field and a Find missing photos button. It scans for items with no photos, pulls up to six from each item's listing, and, for items with no link, matches them by title against your closet. Strong matches are linked on their own; unclear ones ask Accept or Skip. It makes one request at a time, logs every item, and is safe to run again.
+- **Tracking number.** A new field in the Shipping tab. It is searchable and part of every export. Existing shipping notes are left as they are.
+- **Smaller fixes.** The demo banner icon no longer wraps onto its own line on a 360 px phone. The README now lists the one-time sheet converter in `.scripts/`.
+
+Under the hood, the eBay-only `/ebay/item` lookup was replaced by the Worker's `/listing` route, which understands both sites. The old route still works.
 
 ### v1.2.1: Buyer, ship-by date, Poshmark prepaid label, and an accessibility pass (2026-11-13)
 
